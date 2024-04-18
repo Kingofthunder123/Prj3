@@ -2,6 +2,7 @@
 #include <Servo.h>
 #include <Adafruit_VL6180X.h>
 #include <SPI.h>
+#include <AccelStepper.h>
 
 Adafruit_VL6180X vl1 = Adafruit_VL6180X();
 Adafruit_VL6180X vl2 = Adafruit_VL6180X();
