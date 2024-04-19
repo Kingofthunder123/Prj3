@@ -19,9 +19,9 @@ const int enableVl2 = 2;
 const int enableTcs = 3;
 
 // Servo pins
-const int servo1Pin  = 4;
+const int servo1Pin  = 2;
 const int servo2Pin  = 3;
-const int servo3Pin  = 2;
+const int servo3Pin  = 4;
 const int servoGrPin = 5;
 
 
@@ -46,10 +46,10 @@ void setup() {
   Serial.begin(9600);
 
   // Attaches servo instances
-  // sv1.attach(servo1Pin, 500, 2500);
-  // sv2.attach(servo2Pin, 500, 2500);
+  //sv1.attach(servo1Pin, 500, 2500);
+  sv2.attach(servo2Pin, 500, 2500);
   // sv3.attach(servo3Pin, 500, 2500);
-  // svGr.attach(servoGrPin, 500, 2500);
+  svGr.attach(servoGrPin, 500, 2500);
 
   // Sets Microsteppins as output
   pinMode(uStep0, OUTPUT);
@@ -127,8 +127,15 @@ void setup() {
   // set the maximum speed, acceleration factor,
 	// initial speed and the target position
 	turnStepper.setMaxSpeed(1000);
-	turnStepper.setAcceleration(500);
+	turnStepper.setAcceleration(1000);
 	turnStepper.setSpeed(1000);
+
+  delay(1000);
+
+  //sv1.write(0);
+  sv2.write(0);
+  // sv3.write(0);
+  svGr.write(0);
 
   delay(1000);
 
@@ -144,7 +151,11 @@ void loop() {
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
-  delay(500);
+
+  svGr.write(180);
+  sv2.write(0);
+
+  delay(5000);
   // gipp
   // move 120 deg CW
   turnStepper.move(533);
