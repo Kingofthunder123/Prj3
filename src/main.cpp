@@ -37,8 +37,8 @@ Servo sv3;
 Servo svGr;
 
 Adafruit_VL6180X vl1 = Adafruit_VL6180X();
-Adafruit_VL6180X vl2 = Adafruit_VL6180X();
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+// Adafruit_VL6180X vl2 = Adafruit_VL6180X();
+// Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
 
 void setup() {
@@ -131,8 +131,6 @@ void setup() {
 	turnStepper.setSpeed(1000);
 
   
-  sv1.write(0);
-  svGr.write(0);
   
 }
 
