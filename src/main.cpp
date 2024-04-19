@@ -48,8 +48,8 @@ void setup() {
   // Attaches servo instances
   //sv1.attach(servo1Pin, 500, 2500);
   sv2.attach(servo2Pin, 500, 2500);
-  // sv3.attach(servo3Pin, 500, 2500);
-  svGr.attach(servoGrPin, 500, 2500);
+  sv3.attach(servo3Pin, 500, 2500);
+  //svGr.attach(servoGrPin, 500, 2500);
 
   // Sets Microsteppins as output
   pinMode(uStep0, OUTPUT);
@@ -132,12 +132,15 @@ void setup() {
 
   delay(1000);
 
-  //sv1.write(0);
-  sv2.write(0);
-  // sv3.write(0);
-  svGr.write(0);
+  // sv1.write(180);
+  //sv2.write(0);
+  sv2.write(180);
+  sv3.write(0);
+  //svGr.write(20);
 
   delay(1000);
+
+  sv3.write(180);
 
   
 }
@@ -152,7 +155,7 @@ void loop() {
     turnStepper.run();
   }
 
-  svGr.write(180);
+  svGr.write(10);
   sv2.write(0);
 
   delay(5000);
