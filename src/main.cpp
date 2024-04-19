@@ -19,20 +19,22 @@ const int uStep2 = 18;
 #define motorInterfaceType 1
 
 // Creates a stepper instance
-AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
+// AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
 // Creates two vl6180 instances
 Adafruit_VL6180X vl1 = Adafruit_VL6180X();
-Adafruit_VL6180X vl2 = Adafruit_VL6180X();
+// Adafruit_VL6180X vl2 = Adafruit_VL6180X();
 
 // Creates a servo instance
-Servo Sv;
+// Servo Sv;
 
 
 void setup() {
 
+  Serial.begin(9600);
+
   // Attach servo instance
-  Sv.attach(2, 500, 2500);
+  // Sv.attach(2, 500, 2500);
 
   // // Set Microsteppins as output
   // pinMode(uStep0, OUTPUT);
@@ -49,7 +51,21 @@ void setup() {
 	// turnStepper.setMaxSpeed(1000);
 	// turnStepper.setAcceleration(500);
 	// turnStepper.setSpeed(1000);
-  Sv.write(0);
+  // Sv.write(0);
+
+  // Waits for serial before continuing the program
+  while (!Serial) {
+    delay(1);
+  }
+
+
+  // !!!VL1!!!
+  // Begins communication with ToF sensor vl1
+  if (!vl1.begin()) {
+    Serial.println("Failed to find vl1");
+    while (1);
+  }
+  Serial.println("Vl1 found!");
 	
 
   
