@@ -29,12 +29,12 @@ const int servoGrPin = 1;
 #define motorInterfaceType 1
 
 // Creates a stepper instance
-//AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
+AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
-// Servo sv1;
-// Servo sv2;
-// Servo sv3;
-// Servo svGr;
+Servo sv1;
+Servo sv2;
+Servo sv3;
+Servo svGr;
 
 Adafruit_VL6180X vl1 = Adafruit_VL6180X();
 // Adafruit_VL6180X vl2 = Adafruit_VL6180X();
@@ -46,10 +46,10 @@ void setup() {
   Serial.begin(9600);
 
   // Attaches servo instances
-  // sv1.attach(servo1Pin, 500, 2500);
-  // sv2.attach(servo2Pin, 500, 2500);
-  // sv3.attach(servo3Pin, 500, 2500);
-  // svGr.attach(servoGrPin, 500, 2500);
+  sv1.attach(servo1Pin, 500, 2500);
+  sv2.attach(servo2Pin, 500, 2500);
+  sv3.attach(servo3Pin, 500, 2500);
+  svGr.attach(servoGrPin, 500, 2500);
 
   // Sets Microsteppins as output
   pinMode(uStep0, OUTPUT);
@@ -84,7 +84,7 @@ void setup() {
   Serial.println("Vl1 found!");
 
   // Changes adress of ToF sensor vl1 from 0x29 to 0x30
-  vl1.setAddress(0x30);
+  //vl1.setAddress(0x30);
 
 
   // // !!!VL2!!!
@@ -117,20 +117,23 @@ void setup() {
 
   Serial.println("adresses:");
   Serial.print("vl1: ");
-  Serial.println(vl1.getAddress());
+  Serial.println(vl1.getAddress(), HEX);
   Serial.print("vl2: ");
-  // Serial.println(vl2.getAddress());
+  // Serial.println(vl2.getAddress(), HEX);
   Serial.print("tcs: ");
-  Serial.println(0x29);
+  Serial.println(0x29, HEX);
   Serial.println("Init done!");
 
   // set the maximum speed, acceleration factor,
 	// initial speed and the target position
-	// turnStepper.setMaxSpeed(1000);
-	// turnStepper.setAcceleration(500);
-	// turnStepper.setSpeed(1000);
+	turnStepper.setMaxSpeed(1000);
+	turnStepper.setAcceleration(500);
+	turnStepper.setSpeed(1000);
 
   
+  delay(100);
+
+  sv3.write(0);
   
 }
 
