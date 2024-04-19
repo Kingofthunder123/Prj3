@@ -22,7 +22,7 @@ const int enableTcs = 3;
 const int servo1Pin  = 4;
 const int servo2Pin  = 3;
 const int servo3Pin  = 2;
-const int servoGrPin = 1;
+const int servoGrPin = 5;
 
 
 // Defines motor interface type
@@ -46,10 +46,10 @@ void setup() {
   Serial.begin(9600);
 
   // Attaches servo instances
-  sv1.attach(servo1Pin, 500, 2500);
-  sv2.attach(servo2Pin, 500, 2500);
-  sv3.attach(servo3Pin, 500, 2500);
-  svGr.attach(servoGrPin, 500, 2500);
+  // sv1.attach(servo1Pin, 500, 2500);
+  // sv2.attach(servo2Pin, 500, 2500);
+  // sv3.attach(servo3Pin, 500, 2500);
+  // svGr.attach(servoGrPin, 500, 2500);
 
   // Sets Microsteppins as output
   pinMode(uStep0, OUTPUT);
@@ -57,7 +57,7 @@ void setup() {
   pinMode(uStep2, OUTPUT);
 
   // Sets 1/4 microstepping
-  digitalWrite(uStep0, LOW);
+  digitalWrite(uStep0, HIGH);
   digitalWrite(uStep1, HIGH);
   digitalWrite(uStep2, LOW);
   
@@ -130,14 +130,49 @@ void setup() {
 	turnStepper.setAcceleration(500);
 	turnStepper.setSpeed(1000);
 
-  
-  delay(100);
+  delay(1000);
 
-  sv3.write(0);
   
 }
 
 void loop() {
 
+  
+  
+  // move 60 deg CCW
+  turnStepper.moveTo(-267);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  delay(500);
+  // gipp
+  // move 120 deg CW
+  turnStepper.move(533);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  delay(500);
+  // release
+  // move 60 deg CW
+  turnStepper.move(267);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  delay(500);
+  // gripp
+  // move 90 deg CCW
+  turnStepper.move(-400);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  delay(500);
+
+  turnStepper.moveTo(0);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  while(1);
+  
   
 }
