@@ -32,7 +32,7 @@ Servo Sv;
 void setup() {
 
   // Attach servo instance
-  Sv.attach(9, 500, 2500);
+  Sv.attach(2, 500, 2500);
 
   // // Set Microsteppins as output
   // pinMode(uStep0, OUTPUT);
