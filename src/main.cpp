@@ -3,6 +3,7 @@
 #include <Adafruit_VL6180X.h>
 #include <SPI.h>
 #include <AccelStepper.h>
+#include <Adafruit_TCS34725.h>
 
 // Define pin connections
 const int dirPin = 14;
