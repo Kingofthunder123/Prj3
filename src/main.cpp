@@ -56,12 +56,12 @@ struct Action {
   bool openGripper;
 };
 
-Pose STANDBY_HOR  = {0, 0, 0};
+Pose STANDBY_HOR  = {180, 170, 30};
 Pose STANDBY_VER  = {10, 180, 0};
 Pose NEUTRAL      = {0, 0, 45};
 
-Pose END_HOR = {0, 0, 0};
-Pose END_VER = {35, 130, 0};
+Pose END_HOR = {180, 170, 15};
+Pose END_VER = {35, 140, 0};
 
 Pose CURRENT = {sv1.read(), sv2.read(), sv3.read()};
 
@@ -85,42 +85,13 @@ void setSv(Pose setPose){
 void writeAction(Action ACTION) {
 
 
-  int startS1 = CURRENT.posSv1;
-  int startS2 = CURRENT.posSv2;
-  int startS3 = CURRENT.posSv3;
+  
+
+  int startS1 = ACTION.startPose.posSv1;
+  int startS2 = ACTION.startPose.posSv2;
+  int startS3 = ACTION.startPose.posSv3;
 
   int i = 0;
-
-  while((startS1 != ACTION.startPose.posSv1) || (startS2 != ACTION.startPose.posSv2) || (startS3 != ACTION.targetPose.posSv3)){
-    
-    
-    
-
-    if((startS1 != ACTION.startPose.posSv1)){
-      startS1 += (startS1 < ACTION.startPose.posSv1 ? 1 : -1);
-      sv1.write(startS1);
-    }
-    if(startS2 != ACTION.startPose.posSv2){
-      startS2 += (startS2 < ACTION.startPose.posSv2 ? 1 : -1);
-      sv2.write(startS2);
-    }
-    if(startS3 != ACTION.startPose.posSv3){
-      startS3 += (startS3 < ACTION.startPose.posSv3 ? 1 : -1);
-      sv3.write(startS3);
-    }
-
-    delay(20);
-    Serial.println("hi");
-    i++;
-
-  }
-
-
-  startS1 = ACTION.startPose.posSv1;
-  startS2 = ACTION.startPose.posSv2;
-  startS3 = ACTION.startPose.posSv3;
-
-  i = 0;
 
   while((startS1 != ACTION.targetPose.posSv1) || (startS2 != ACTION.targetPose.posSv2) || (startS3 != ACTION.targetPose.posSv3)){
     
@@ -150,7 +121,7 @@ void writeAction(Action ACTION) {
 
   delay(1000);
 
-  for(int i = (!ACTION.openGripper)*40; i != ACTION.openGripper*40; i += 1*ACTION.openGripper-1*(!ACTION.openGripper)){
+  for(int i = (!ACTION.openGripper)*60; i != ACTION.openGripper*60; i += 1*ACTION.openGripper-1*(!ACTION.openGripper)){
     svGr.write(i);
 
     delay(25);
@@ -177,12 +148,18 @@ void setup() {
 
   // Attaches servo instances
   sv1.attach(servo1Pin, 500, 2500);
+  sv1.write(10);
+  delay(100);
   sv2.attach(servo2Pin, 500, 2500);
+  sv2.write(180);
+  delay(100);
   sv3.attach(servo3Pin, 500, 2500);
+  sv3.write(0);
+  delay(100);
   svGr.attach(servoGrPin, 500, 2500);
+  svGr.write(60);
+  delay(100);
 
-  setSv(STANDBY_VER);
-  svGr.write(40);
 
   // Sets Microsteppins as output
   pinMode(uStep0, OUTPUT);
@@ -264,13 +241,10 @@ void setup() {
 	turnStepper.setSpeed(1000);
 
   
-  writeAction(GRIPP_VER);
+  
+ 
 
   
-  
-  // delay(2000);
-  // svGr.write(30);
-    
   
   
 }
@@ -278,14 +252,21 @@ void setup() {
 void loop() {
 
 
-  while(1);
   
+  //slowServo(sv2, 130, 180);
+
   // move 60 deg CCW
   turnStepper.moveTo(-267);
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
 
+  writeAction(GRIPP_VER);
+
+  slowServo(sv1, 35, 5);
+
+
+  
   delay(500);
 
 
@@ -295,13 +276,34 @@ void loop() {
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
+  writeAction(RELEASE_VER);
+
+  slowServo(sv3, 0, 5);
+
+  writeAction({END_VER, STANDBY_VER, true});
+
   delay(500);
   // release
   // move 60 deg CW
-  turnStepper.move(267);
+  turnStepper.move(135);
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
+  slowServo(sv3, 0, 50);
+  slowServo(sv1, 10, 150);
+  slowServo(sv2, 180, 140);
+  turnStepper.move(135);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+  //writeAction(GRIPP_HOR);
+
+  
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
   delay(500);
   // gripp
   // move 90 deg CCW
@@ -309,12 +311,19 @@ void loop() {
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
+  
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  
   delay(500);
 
-  turnStepper.moveTo(0);
-  while(turnStepper.distanceToGo() != 0){
-    turnStepper.run();
-  }
+  // turnStepper.moveTo(0);
+  // while(turnStepper.distanceToGo() != 0){
+  //   turnStepper.run();
+  // }
 
   while(1);
   
