@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <Servo.h>
+#include <VarSpeedServo.h>
 #include <Adafruit_VL6180X.h>
 #include <SPI.h>
 #include <AccelStepper.h>
@@ -25,6 +25,7 @@ const int servo3Pin  = 4;
 const int servoGrPin = 5;
 
 
+
 // Defines motor interface type
 #define motorInterfaceType 1
 
@@ -41,15 +42,106 @@ Adafruit_VL6180X vl1 = Adafruit_VL6180X();
 // Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
 
+//typedef enum {GRIPP_HOR, GRIPP_VER, RELEASE} ACTION;
+
+struct Pose {
+  int posSv1;
+  int posSv2;
+  int posSv3;
+};
+
+struct Action {
+  Pose startPose;
+  Pose targetPose;
+  bool openGripper;
+};
+
+Pose STANDBY_HOR  = {0, 0, 0};
+Pose STANDBY_VER  = {10, 180, 0};
+Pose NEUTRAL      = {0, 0, 45};
+
+Pose END_HOR = {0, 0, 0};
+Pose END_VER = {35, 130, 0};
+
+Action GRIPP_HOR = {STANDBY_HOR, END_HOR, false};
+Action GRIPP_VER = {STANDBY_VER, END_VER, false};
+Action RELEASE_HOR = {STANDBY_HOR, END_HOR, true};
+Action RELEASE_VER = {STANDBY_VER, END_VER, true};
+
+void setSv(Pose setPose){
+  sv1.write(setPose.posSv1);
+  delay(1);
+  sv2.write(setPose.posSv2);
+  delay(1);
+  sv3.write(setPose.posSv3);
+  delay(1);
+}
+
+
+void writeAction(Action ACTION) {
+
+  setSv(ACTION.startPose);
+
+  delay(1000);
+
+  int startS1 = ACTION.startPose.posSv1;
+  int startS2 = ACTION.startPose.posSv2;
+  int startS3 = ACTION.startPose.posSv3;
+
+  int i = 0;
+
+  while((startS1 != ACTION.targetPose.posSv1) || (startS2 != ACTION.targetPose.posSv2) || (startS3 != ACTION.targetPose.posSv3)){
+    
+    
+    
+
+    if((startS1 != ACTION.targetPose.posSv1) && (i > 45)){
+      startS1 += 1;//startS1 < ACTION.targetPose.posSv1 ? 1 : -1;
+      sv1.write(startS1);
+    }
+    if(startS2 != ACTION.targetPose.posSv2){
+      startS2 -= 1;//startS2 < ACTION.targetPose.posSv2 ? 1 : -1;
+      sv2.write(startS2);
+    }
+    if(startS3 != ACTION.targetPose.posSv3){
+      startS3 += 1;// startS3 < ACTION.targetPose.posSv3 ? 1 : -1;
+      sv3.write(startS3);
+    }
+
+    delay(10);
+    Serial.println("hi");
+    i++;
+
+  }
+
+  
+
+  delay(1000);
+
+  for(int i = (!ACTION.openGripper)*40; i != ACTION.openGripper*40; i += 1*ACTION.openGripper-1*(!ACTION.openGripper)){
+    svGr.write(i);
+
+    delay(25);
+  }
+  
+  
+
+
+}
+
+
 void setup() {
   // Starts serial connection
   Serial.begin(9600);
 
   // Attaches servo instances
-  //sv1.attach(servo1Pin, 500, 2500);
+  sv1.attach(servo1Pin, 500, 2500);
   sv2.attach(servo2Pin, 500, 2500);
   sv3.attach(servo3Pin, 500, 2500);
-  //svGr.attach(servoGrPin, 500, 2500);
+  svGr.attach(servoGrPin, 500, 2500);
+
+  setSv(STANDBY_VER);
+  svGr.write(40);
 
   // Sets Microsteppins as output
   pinMode(uStep0, OUTPUT);
@@ -130,24 +222,22 @@ void setup() {
 	turnStepper.setAcceleration(1000);
 	turnStepper.setSpeed(1000);
 
-  delay(1000);
+  
+  writeAction(GRIPP_VER);
 
-  // sv1.write(180);
-  //sv2.write(0);
-  sv2.write(180);
-  sv3.write(0);
-  //svGr.write(20);
-
-  delay(1000);
-
-  sv3.write(180);
-
+  
+  
+  // delay(2000);
+  // svGr.write(30);
+    
+  
   
 }
 
 void loop() {
 
-  
+
+  while(1);
   
   // move 60 deg CCW
   turnStepper.moveTo(-267);
@@ -155,10 +245,9 @@ void loop() {
     turnStepper.run();
   }
 
-  svGr.write(10);
-  sv2.write(0);
+  delay(500);
 
-  delay(5000);
+
   // gipp
   // move 120 deg CW
   turnStepper.move(533);
