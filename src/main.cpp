@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include <VarSpeedServo.h>
+#include <Servo.h> 
 #include <Adafruit_VL6180X.h>
 #include <SPI.h>
 #include <AccelStepper.h>
@@ -63,12 +63,16 @@ Pose NEUTRAL      = {0, 0, 45};
 Pose END_HOR = {0, 0, 0};
 Pose END_VER = {35, 130, 0};
 
+Pose CURRENT = {sv1.read(), sv2.read(), sv3.read()};
+
 Action GRIPP_HOR = {STANDBY_HOR, END_HOR, false};
 Action GRIPP_VER = {STANDBY_VER, END_VER, false};
 Action RELEASE_HOR = {STANDBY_HOR, END_HOR, true};
 Action RELEASE_VER = {STANDBY_VER, END_VER, true};
 
 void setSv(Pose setPose){
+
+  
   sv1.write(setPose.posSv1);
   delay(1);
   sv2.write(setPose.posSv2);
@@ -80,35 +84,63 @@ void setSv(Pose setPose){
 
 void writeAction(Action ACTION) {
 
-  setSv(ACTION.startPose);
 
-  delay(1000);
-
-  int startS1 = ACTION.startPose.posSv1;
-  int startS2 = ACTION.startPose.posSv2;
-  int startS3 = ACTION.startPose.posSv3;
+  int startS1 = CURRENT.posSv1;
+  int startS2 = CURRENT.posSv2;
+  int startS3 = CURRENT.posSv3;
 
   int i = 0;
+
+  while((startS1 != ACTION.startPose.posSv1) || (startS2 != ACTION.startPose.posSv2) || (startS3 != ACTION.targetPose.posSv3)){
+    
+    
+    
+
+    if((startS1 != ACTION.startPose.posSv1)){
+      startS1 += (startS1 < ACTION.startPose.posSv1 ? 1 : -1);
+      sv1.write(startS1);
+    }
+    if(startS2 != ACTION.startPose.posSv2){
+      startS2 += (startS2 < ACTION.startPose.posSv2 ? 1 : -1);
+      sv2.write(startS2);
+    }
+    if(startS3 != ACTION.startPose.posSv3){
+      startS3 += (startS3 < ACTION.startPose.posSv3 ? 1 : -1);
+      sv3.write(startS3);
+    }
+
+    delay(20);
+    Serial.println("hi");
+    i++;
+
+  }
+
+
+  startS1 = ACTION.startPose.posSv1;
+  startS2 = ACTION.startPose.posSv2;
+  startS3 = ACTION.startPose.posSv3;
+
+  i = 0;
 
   while((startS1 != ACTION.targetPose.posSv1) || (startS2 != ACTION.targetPose.posSv2) || (startS3 != ACTION.targetPose.posSv3)){
     
     
     
 
-    if((startS1 != ACTION.targetPose.posSv1) && (i > 45)){
-      startS1 += 1;//startS1 < ACTION.targetPose.posSv1 ? 1 : -1;
+    if((startS1 != ACTION.targetPose.posSv1) && (i > 25)){
+      startS1 += (startS1 < ACTION.targetPose.posSv1 ? 1 : -1);
       sv1.write(startS1);
     }
     if(startS2 != ACTION.targetPose.posSv2){
-      startS2 -= 1;//startS2 < ACTION.targetPose.posSv2 ? 1 : -1;
+      startS2 += (startS2 < ACTION.targetPose.posSv2 ? 1 : -1);
       sv2.write(startS2);
     }
     if(startS3 != ACTION.targetPose.posSv3){
-      startS3 += 1;// startS3 < ACTION.targetPose.posSv3 ? 1 : -1;
+      startS3 += (startS3 < ACTION.targetPose.posSv3 ? 1 : -1);
       sv3.write(startS3);
     }
 
-    delay(10);
+    delay(15);
     Serial.println("hi");
     i++;
 
@@ -127,6 +159,15 @@ void writeAction(Action ACTION) {
   
 
 
+}
+
+
+void slowServo(Servo sv, int begin, int end){
+
+  for(int i = begin; i != end; i += (begin < end ? 1 : -1)){
+    sv.write(i);
+    delay(25);
+  }
 }
 
 
