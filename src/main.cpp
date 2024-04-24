@@ -242,15 +242,11 @@ void setup() {
 
   
   
- 
-
-  
   
   
 }
 
 void loop() {
-
 
   
   //slowServo(sv2, 130, 180);
@@ -276,11 +272,13 @@ void loop() {
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
-  writeAction(RELEASE_VER);
+  slowServo(sv3, 0, 50);
+  slowServo(sv1, 5, 150);
+  slowServo(sv2, 140, 140);
 
-  slowServo(sv3, 0, 5);
-
-  writeAction({END_VER, STANDBY_VER, true});
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
 
   delay(500);
   // release
@@ -289,9 +287,7 @@ void loop() {
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
-  slowServo(sv3, 0, 50);
-  slowServo(sv1, 10, 150);
-  slowServo(sv2, 180, 140);
+  
   turnStepper.move(135);
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
@@ -320,11 +316,89 @@ void loop() {
   
   delay(500);
 
-  // turnStepper.moveTo(0);
-  // while(turnStepper.distanceToGo() != 0){
-  //   turnStepper.run();
-  // }
+  while(1){
 
+  turnStepper.move(133);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(-800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(667);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(-800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  
+
+
+
+
+
+
+
+
+  turnStepper.move(133);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(-933);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+  };
   while(1);
   
   
