@@ -32,15 +32,19 @@ const int servoGrPin = 4;
 // Creates a stepper instance
 AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
+// Creates servo instances for all joints
 Servo svBase;
 Servo svElbow;
 Servo svWrist;
 Servo svGripper;
 
-// Adafruit_VL6180X vl1 = Adafruit_VL6180X();
-// Adafruit_VL6180X vl2 = Adafruit_VL6180X();
-// Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
+// Creates vl1 instance for VL6180 distance sensor 
+Adafruit_VL6180X vl1 = Adafruit_VL6180X();
 
+// Custom variable type for diabolo orientation
+typedef enum {HORIZONTAL, VERTICAL} ORIENTATION;
+
+// Structure to define all servo angles in a single instance
 struct Pos{
   int base;
   int elbow;
@@ -48,35 +52,104 @@ struct Pos{
   int gripper;
 };
 
+// Positions of all servo's
+Pos servoPos;
+
+void updateServoPos(){
+  svBase.write(servoPos.base);
+  svElbow.write(servoPos.elbow);
+  svWrist.write(servoPos.wrist);
+  svGripper.write(servoPos.gripper);
+
+  Serial.print(servoPos.base);
+  Serial.print(" ");
+  Serial.print(servoPos.elbow);
+  Serial.print(servoPos.wrist);
+  Serial.println(servoPos.gripper);
+}
+
+// Custom variable to indicate the side to scan for the diabolo
+typedef enum {LEFT, RIGHT} SIDE;
+
+// Function for picking up a diabolo where "dirDiabolo" is the orientation of the diabolo and "side" is the side to scan
+void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
+  int dir;
+  if(side == LEFT){
+    dir = -1;
+  }
+  else{
+    dir = 1;
+  }
+
+  turnStepper.moveTo(dir*20);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  servoPos.elbow = 60;
+  servoPos.wrist = 20;
+  servoPos.gripper = 40;
+  updateServoPos();
+
+  turnStepper.moveTo(dir*160);
+
+  while(vl1.readRange() > 80){
+    turnStepper.run();
+  }
+  turnStepper.stop();
+  
+  servoPos.base     = 10;
+  servoPos.elbow    = 50;
+  servoPos.wrist    = 20;
+  updateServoPos();
+  
+  if(vl1.readRange() > 80 && dirDiabolo == HORIZONTAL){
+    servoPos.base     = 50;
+    servoPos.elbow    = 50;
+    servoPos.wrist    = 120;
+    updateServoPos();
+
+    delay(100);
+    servoPos.base     = 20;
+    servoPos.elbow    = 50;
+    servoPos.wrist    = 120;
+    updateServoPos();
+
+    delay(100);
+    servoPos.gripper = 15;
+    updateServoPos();
+  }
 
 
-Pos startPos;
 
-typedef enum {HORIZONTAL, VERTICAL} ORIENTATION;
-
-void scanAndPickup(ORIENTATION dirDiabolo){};
+}
 
 void setup() {
 
-  startPos.base     = 0;
-  startPos.elbow    = 30;
-  startPos.wrist    = 0;
-  startPos.gripper  = 15;
+  // Initial servo positions
+  servoPos.base     = 0;
+  servoPos.elbow    = 30;
+  servoPos.wrist    = 0;
+  servoPos.gripper  = 15;
+
   // Starts serial connection
   Serial.begin(9600);
 
   // Attaches servo instances
   svBase.attach(servo1Pin, 500, 2500);
-  svBase.write(startPos.base);
+  svBase.write(servoPos.base);
   delay(100);
+
   svElbow.attach(servo2Pin, 500, 2500);
-  svElbow.write(startPos.elbow);
+  svElbow.write(servoPos.elbow);
   delay(100);
+
   svWrist.attach(servo3Pin, 500, 2500);
-  svWrist.write(startPos.wrist);
+  svWrist.write(servoPos.wrist);
   delay(100);
+
   svGripper.attach(servoGrPin, 500, 2500);
-  svGripper.write(startPos.gripper);
+  svGripper.write(servoPos.gripper);
   delay(100);
 
 
@@ -106,11 +179,11 @@ void setup() {
 
   // !!!VL1!!!
   // Begins communication with ToF sensor vl1
-  // if (!vl1.begin()) {
-  //   Serial.println("Failed to find vl1");
-  //   while (1);
-  // }
-  // Serial.println("Vl1 found!");
+  if (!vl1.begin()) {
+    Serial.println("Failed to find vl1");
+    while (1);
+  }
+  Serial.println("Vl1 found!");
 
   
 
