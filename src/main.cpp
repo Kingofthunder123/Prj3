@@ -74,7 +74,7 @@ typedef enum {LEFT, RIGHT} SIDE;
 
 // Function for picking up a diabolo where "dirDiabolo" is the orientation of the diabolo and "side" is the side to scan
 void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
-
+  Timer1.start();
   // Decide side to pick up the diabolo
   int dir;
   if(side == LEFT){
@@ -127,7 +127,7 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
   }
 
 
-
+  Timer1.stop();
 }
 
 void blink(){
@@ -135,6 +135,14 @@ void blink(){
 }
 
 void setup() {
+
+  pinMode(ledPin, OUTPUT);
+
+  Timer1.initialize(200); // initialize timer1, and set a 1 second period
+
+  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
+
+  Timer1.start();
 
   // Initial servo positions
   servoPos.base     = 0;
@@ -216,13 +224,8 @@ void setup() {
 	turnStepper.setAcceleration(1000);
 	turnStepper.setSpeed(1000);
 
-   pinMode(ledPin, OUTPUT);
-
-  Timer1.initialize(); // initialize timer1, and set a 1 second period
-
-  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
-
-
+  
+  Timer1.stop();
 }
 
 void loop() {
