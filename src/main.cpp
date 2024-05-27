@@ -73,6 +73,8 @@ typedef enum {LEFT, RIGHT} SIDE;
 
 // Function for picking up a diabolo where "dirDiabolo" is the orientation of the diabolo and "side" is the side to scan
 void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
+
+  // Decide side to pick up the diabolo
   int dir;
   if(side == LEFT){
     dir = -1;
@@ -81,29 +83,37 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
     dir = 1;
   }
 
+  // Rotate arm to avoid support bracket
   turnStepper.moveTo(dir*20);
   while(turnStepper.distanceToGo() != 0){
     turnStepper.run();
   }
 
+  // Define arm joint positions for scanning the diabolo
   servoPos.elbow = 60;
   servoPos.wrist = 20;
   servoPos.gripper = 40;
   updateServoPos();
 
-  turnStepper.moveTo(dir*160);
+  // Rotate arm to scan for diabolo
+  turnStepper.moveTo(dir*140);
 
+  // Keep rotating arm till sesor detects diabolo
   while(vl1.readRange() > 80){
     turnStepper.run();
   }
   turnStepper.stop();
   
+  // Set joint positions to scan for diabolo position
   servoPos.base     = 10;
   servoPos.elbow    = 50;
   servoPos.wrist    = 20;
   updateServoPos();
   
+  // Read sensor to check orientation and if it matches the orientation of the diabolo that needs to be picked up execude code to do so
   if(vl1.readRange() > 80 && dirDiabolo == HORIZONTAL){
+
+    // Position sequence to pick up the diabolo
     servoPos.base     = 50;
     servoPos.elbow    = 50;
     servoPos.wrist    = 120;
