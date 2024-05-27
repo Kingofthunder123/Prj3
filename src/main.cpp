@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <AccelStepper.h>
 #include <Adafruit_TCS34725.h>
+#include <TimerOne.h>
 
 // Pins for stepper motor
 const int dirPin  = 14;
@@ -23,7 +24,7 @@ const int servo2Pin  = 2;
 const int servo3Pin  = 3;
 const int servoGrPin = 4;
 
-
+const int ledPin     = 31;
 
 // Defines motor interface type
 #define motorInterfaceType 1
@@ -104,14 +105,9 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
   }
   turnStepper.stop();
   
-  // Set joint positions to scan for diabolo position
-  servoPos.base     = 10;
-  servoPos.elbow    = 50;
-  servoPos.wrist    = 20;
-  updateServoPos();
-  
+
   // Read sensor to check orientation and if it matches the orientation of the diabolo that needs to be picked up execude code to do so
-  if(vl1.readRange() > 80 && dirDiabolo == HORIZONTAL){
+  if(vl2.readRange() > 80 && dirDiabolo == HORIZONTAL){
 
     // Position sequence to pick up the diabolo
     servoPos.base     = 50;
@@ -132,6 +128,10 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
 
 
 
+}
+
+void blink(){
+  digitalWrite(ledPin, !digitalRead(ledPin));
 }
 
 void setup() {
@@ -215,6 +215,14 @@ void setup() {
 	turnStepper.setMaxSpeed(1000);
 	turnStepper.setAcceleration(1000);
 	turnStepper.setSpeed(1000);
+
+   pinMode(ledPin, OUTPUT);
+
+  Timer1.initialize(); // initialize timer1, and set a 1 second period
+
+  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
+
+
 }
 
 void loop() {
