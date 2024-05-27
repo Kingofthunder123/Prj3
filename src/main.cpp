@@ -16,7 +16,6 @@ const int uStep2 = 18;
 
 // Enable pins for vl2 sensor and tcs sensor
 const int enableVl2 = 2;
-const int enableTcs = 3;
 
 // Servo pins
 const int servo1Pin  = 1;
@@ -40,6 +39,7 @@ Servo svGripper;
 
 // Creates vl1 instance for VL6180 distance sensor 
 Adafruit_VL6180X vl1 = Adafruit_VL6180X();
+Adafruit_VL6180X vl2 = Adafruit_VL6180X();
 
 // Custom variable type for diabolo orientation
 typedef enum {HORIZONTAL, VERTICAL} ORIENTATION;
@@ -175,11 +175,9 @@ void setup() {
   
   // Sets pinmodes
   pinMode(enableVl2, OUTPUT);
-  pinMode(enableTcs, OUTPUT);
 
   // Disables ToF sensor vl2 and colour sensor
   digitalWrite(enableVl2, LOW);
-  digitalWrite(enableTcs, LOW);
 
   // Waits for serial before continuing the program
   while (!Serial) {
@@ -195,6 +193,21 @@ void setup() {
   }
   Serial.println("Vl1 found!");
 
+  vl1.setAddress(0x30);
+
+  // !!!VL2!!!
+  // Enables ToF sensor vl2 and wait for it to start
+  digitalWrite(enableVl2, HIGH);
+  delay(50);
+
+  // Begins communication with ToF sensor vl2
+  if (!vl2.begin()) {
+    Serial.println("Failed to find vl2");
+    while (1);
+  }
+  Serial.println("Vl2 found!");
+
+  
   
 
   // set the maximum speed, acceleration factor,
