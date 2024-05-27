@@ -145,7 +145,7 @@ void setup() {
   // Starts serial connection
   Serial.begin(9600);
 
-  // Attaches servo instances
+  // Attaches servo instances and set them to initial positions
   svBase.attach(servo1Pin, 500, 2500);
   svBase.write(servoPos.base);
   delay(100);
