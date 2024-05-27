@@ -19,10 +19,10 @@ const int enableVl2 = 2;
 const int enableTcs = 3;
 
 // Servo pins
-const int servo1Pin  = 1;
-const int servo2Pin  = 2;
-const int servo3Pin  = 3;
-const int servoGrPin = 4;
+const int servo1Pin  = 2;
+const int servo2Pin  = 3;
+const int servo3Pin  = 4;
+const int servoGrPin = 5;
 
 
 
@@ -32,134 +32,132 @@ const int servoGrPin = 4;
 // Creates a stepper instance
 AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
-// Creates servo instances for all joints
-Servo svBase;
-Servo svElbow;
-Servo svWrist;
-Servo svGripper;
+Servo sv1;
+Servo sv2;
+Servo sv3;
+Servo svGr;
 
-// Creates vl1 instance for VL6180 distance sensor 
 Adafruit_VL6180X vl1 = Adafruit_VL6180X();
+// Adafruit_VL6180X vl2 = Adafruit_VL6180X();
+// Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
-// Custom variable type for diabolo orientation
-typedef enum {HORIZONTAL, VERTICAL} ORIENTATION;
 
-// Structure to define all servo angles in a single instance
-struct Pos{
-  int base;
-  int elbow;
-  int wrist;
-  int gripper;
+//typedef enum {GRIPP_HOR, GRIPP_VER, RELEASE} ACTION;
+
+struct Pose {
+  int posSv1;
+  int posSv2;
+  int posSv3;
 };
 
-// Positions of all servo's
-Pos servoPos;
+struct Action {
+  Pose startPose;
+  Pose targetPose;
+  bool openGripper;
+};
 
-void updateServoPos(){
-  svBase.write(servoPos.base);
-  svElbow.write(servoPos.elbow);
-  svWrist.write(servoPos.wrist);
-  svGripper.write(servoPos.gripper);
+Pose STANDBY_HOR  = {180, 170, 30};
+Pose STANDBY_VER  = {10, 180, 0};
+Pose NEUTRAL      = {0, 0, 45};
 
-  Serial.print(servoPos.base);
-  Serial.print(" ");
-  Serial.print(servoPos.elbow);
-  Serial.print(servoPos.wrist);
-  Serial.println(servoPos.gripper);
+Pose END_HOR = {180, 170, 15};
+Pose END_VER = {35, 140, 0};
+
+Pose CURRENT = {sv1.read(), sv2.read(), sv3.read()};
+
+Action GRIPP_HOR = {STANDBY_HOR, END_HOR, false};
+Action GRIPP_VER = {STANDBY_VER, END_VER, false};
+Action RELEASE_HOR = {STANDBY_HOR, END_HOR, true};
+Action RELEASE_VER = {STANDBY_VER, END_VER, true};
+
+void setSv(Pose setPose){
+
+  
+  sv1.write(setPose.posSv1);
+  delay(1);
+  sv2.write(setPose.posSv2);
+  delay(1);
+  sv3.write(setPose.posSv3);
+  delay(1);
 }
 
-// Custom variable to indicate the side to scan for the diabolo
-typedef enum {LEFT, RIGHT} SIDE;
 
-// Function for picking up a diabolo where "dirDiabolo" is the orientation of the diabolo and "side" is the side to scan
-void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
+void writeAction(Action ACTION) {
 
-  // Decide side to pick up the diabolo
-  int dir;
-  if(side == LEFT){
-    dir = -1;
-  }
-  else{
-    dir = 1;
-  }
 
-  // Rotate arm to avoid support bracket
-  turnStepper.moveTo(dir*20);
-  while(turnStepper.distanceToGo() != 0){
-    turnStepper.run();
-  }
-
-  // Define arm joint positions for scanning the diabolo
-  servoPos.elbow = 60;
-  servoPos.wrist = 20;
-  servoPos.gripper = 40;
-  updateServoPos();
-
-  // Rotate arm to scan for diabolo
-  turnStepper.moveTo(dir*140);
-
-  // Keep rotating arm till sesor detects diabolo
-  while(vl1.readRange() > 80){
-    turnStepper.run();
-  }
-  turnStepper.stop();
   
-  // Set joint positions to scan for diabolo position
-  servoPos.base     = 10;
-  servoPos.elbow    = 50;
-  servoPos.wrist    = 20;
-  updateServoPos();
-  
-  // Read sensor to check orientation and if it matches the orientation of the diabolo that needs to be picked up execude code to do so
-  if(vl1.readRange() > 80 && dirDiabolo == HORIZONTAL){
 
-    // Position sequence to pick up the diabolo
-    servoPos.base     = 50;
-    servoPos.elbow    = 50;
-    servoPos.wrist    = 120;
-    updateServoPos();
+  int startS1 = ACTION.startPose.posSv1;
+  int startS2 = ACTION.startPose.posSv2;
+  int startS3 = ACTION.startPose.posSv3;
 
-    delay(100);
-    servoPos.base     = 20;
-    servoPos.elbow    = 50;
-    servoPos.wrist    = 120;
-    updateServoPos();
+  int i = 0;
 
-    delay(100);
-    servoPos.gripper = 15;
-    updateServoPos();
+  while((startS1 != ACTION.targetPose.posSv1) || (startS2 != ACTION.targetPose.posSv2) || (startS3 != ACTION.targetPose.posSv3)){
+    
+    
+    
+
+    if((startS1 != ACTION.targetPose.posSv1) && (i > 25)){
+      startS1 += (startS1 < ACTION.targetPose.posSv1 ? 1 : -1);
+      sv1.write(startS1);
+    }
+    if(startS2 != ACTION.targetPose.posSv2){
+      startS2 += (startS2 < ACTION.targetPose.posSv2 ? 1 : -1);
+      sv2.write(startS2);
+    }
+    if(startS3 != ACTION.targetPose.posSv3){
+      startS3 += (startS3 < ACTION.targetPose.posSv3 ? 1 : -1);
+      sv3.write(startS3);
+    }
+
+    delay(15);
+    Serial.println("hi");
+    i++;
+
   }
 
+  
+
+  delay(1000);
+
+  for(int i = (!ACTION.openGripper)*60; i != ACTION.openGripper*60; i += 1*ACTION.openGripper-1*(!ACTION.openGripper)){
+    svGr.write(i);
+
+    delay(25);
+  }
+  
+  
 
 
 }
+
+
+void slowServo(Servo sv, int begin, int end){
+
+  for(int i = begin; i != end; i += (begin < end ? 1 : -1)){
+    sv.write(i);
+    delay(25);
+  }
+}
+
 
 void setup() {
-
-  // Initial servo positions
-  servoPos.base     = 0;
-  servoPos.elbow    = 30;
-  servoPos.wrist    = 0;
-  servoPos.gripper  = 15;
-
   // Starts serial connection
   Serial.begin(9600);
 
-  // Attaches servo instances and set them to initial positions
-  svBase.attach(servo1Pin, 500, 2500);
-  svBase.write(servoPos.base);
+  // Attaches servo instances
+  sv1.attach(servo1Pin, 500, 2500);
+  sv1.write(10);
   delay(100);
-
-  svElbow.attach(servo2Pin, 500, 2500);
-  svElbow.write(servoPos.elbow);
+  sv2.attach(servo2Pin, 500, 2500);
+  sv2.write(180);
   delay(100);
-
-  svWrist.attach(servo3Pin, 500, 2500);
-  svWrist.write(servoPos.wrist);
+  sv3.attach(servo3Pin, 500, 2500);
+  sv3.write(0);
   delay(100);
-
-  svGripper.attach(servoGrPin, 500, 2500);
-  svGripper.write(servoPos.gripper);
+  svGr.attach(servoGrPin, 500, 2500);
+  svGr.write(60);
   delay(100);
 
 
@@ -195,16 +193,211 @@ void setup() {
   }
   Serial.println("Vl1 found!");
 
+  // Changes adress of ToF sensor vl1 from 0x29 to 0x30
+  vl1.setAddress(0x30);
+
+
+  // !!!VL2!!!
+  // Enables ToF sensor vl2 and wait for it to start
+  digitalWrite(2, HIGH);
+  delay(50);
+
+  // Begins communication with ToF sensor vl2
+  if (!vl2.begin()) {
+    Serial.println("Failed to find vl2");
+    while (1);
+  }
+  Serial.println("Vl2 found!");
+
   
+
+  // // !!!COLOUR SENSOR!!!
+  // // Enable colour sensor
+  // digitalWrite(enableTcs, HIGH);
+  // delay(50);
+
+  // // Begins communication with colour sensor tcs
+  // if (!tcs.begin()) {
+  //   Serial.println("Failed to find tcs");
+  //   while (1);
+  // }
+  // Serial.println("Tcs found!");
+
+  Serial.println("adresses:");
+  Serial.print("vl1: ");
+  Serial.println(vl1.getAddress(), HEX);
+  Serial.print("vl2: ");
+  // Serial.println(vl2.getAddress(), HEX);
+  Serial.print("tcs: ");
+  Serial.println(0x29, HEX);
+  Serial.println("Init done!");
 
   // set the maximum speed, acceleration factor,
 	// initial speed and the target position
 	turnStepper.setMaxSpeed(1000);
 	turnStepper.setAcceleration(1000);
 	turnStepper.setSpeed(1000);
+
+  
+  
+  
+  
 }
 
 void loop() {
 
+  
+  //slowServo(sv2, 130, 180);
 
+  // move 60 deg CCW
+  turnStepper.moveTo(-267);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  writeAction(GRIPP_VER);
+
+  slowServo(sv1, 35, 5);
+
+
+  
+  delay(500);
+
+
+  // gipp
+  // move 120 deg CW
+  turnStepper.move(533);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  slowServo(sv3, 0, 50);
+  slowServo(sv1, 5, 150);
+  slowServo(sv2, 140, 140);
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  delay(500);
+  // release
+  // move 60 deg CW
+  turnStepper.move(135);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+  turnStepper.move(135);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+  //writeAction(GRIPP_HOR);
+
+  
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  delay(500);
+  // gripp
+  // move 90 deg CCW
+  turnStepper.move(-400);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  
+  delay(500);
+
+  while(1){
+
+  turnStepper.move(133);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(-800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(667);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(-800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  
+
+
+
+
+
+
+
+
+  turnStepper.move(133);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+  
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(-933);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 50, 0);
+  slowServo(sv3, 20, 50);
+
+  turnStepper.move(800);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
+
+  slowServo(sv3, 50, 20);
+  slowServo(svGr, 0, 50);
+  slowServo(sv3, 20, 50);
+  };
+  while(1);
+  
+  
 }
