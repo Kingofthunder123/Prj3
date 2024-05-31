@@ -155,13 +155,13 @@ void setup() {
   }
   Serial.println("Vl1 found!");
 
-  pinMode(ledPin, OUTPUT);
+  // pinMode(ledPin, OUTPUT);
 
-  Timer1.initialize(50); // initialize timer1, and set a 1 second period
+  // Timer1.initialize(50); // initialize timer1, and set a 1 second period
 
-  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
+  // Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
 
-  Timer1.start();
+  // Timer1.start();
 
   // Initial servo positions
   servoPos.base     = 35;
@@ -222,6 +222,9 @@ void setup() {
   // }
   // Serial.println("Vl2 found!");
 
+
+  svWrist.detach();
+  svGripper.detach();
   
   
 
@@ -231,14 +234,19 @@ void setup() {
 	turnStepper.setAcceleration(1000);
 	turnStepper.setSpeed(1000);
 
+
+
+  Serial.print("hi");
   
-  Timer1.stop();
+  // Timer1.stop();
+
+  
 
 
   
 }
 
 void loop() {
-  
-
+ 
+ 
 }
