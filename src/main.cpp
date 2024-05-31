@@ -136,13 +136,13 @@ void blink(){
 
 void setup() {
 
-  pinMode(ledPin, OUTPUT);
+  // pinMode(ledPin, OUTPUT);
 
-  Timer1.initialize(200); // initialize timer1, and set a 1 second period
+  // Timer1.initialize(200); // initialize timer1, and set a 1 second period
 
-  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
+  // Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
 
-  Timer1.start();
+  // Timer1.start();
 
   // Initial servo positions
   servoPos.base     = 0;
@@ -192,7 +192,7 @@ void setup() {
     delay(1);
   }
 
-
+  delay(20);
   // !!!VL1!!!
   // Begins communication with ToF sensor vl1
   if (!vl1.begin()) {
@@ -225,7 +225,7 @@ void setup() {
 	turnStepper.setSpeed(1000);
 
   
-  Timer1.stop();
+  // Timer1.stop();
 
 
   servoPos.base = 60;
