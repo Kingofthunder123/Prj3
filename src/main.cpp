@@ -26,7 +26,7 @@ void setup() {
 }
 
 void loop() {
-  
+  Serial.print("begin");
   uint8_t range = vl.readRange();
   
 
@@ -38,4 +38,6 @@ void loop() {
   
   
   delay(50);
+
+  Serial.print("hi");
 }
