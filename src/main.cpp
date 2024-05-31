@@ -7,13 +7,13 @@
 #include <TimerOne.h>
 
 // Pins for stepper motor
-const int dirPin  = 14;
+const int dirPin  = 16;
 const int stepPin = 15;
 
 // MicroStep pins for stepper motor
-const int uStep0 = 20;
+const int uStep0 = 18;
 const int uStep1 = 19;
-const int uStep2 = 18;
+const int uStep2 = 20;
 
 // Enable pins for vl2 sensor and tcs sensor
 const int enableVl2 = 2;
@@ -22,7 +22,7 @@ const int enableVl2 = 2;
 const int servo1Pin  = 6;
 const int servo2Pin  = 4;
 const int servo3Pin  = 2;
-const int servoGrPin = 5;
+const int servoGrPin = 7;
 
 const int ledPin     = 45;
 
@@ -164,10 +164,15 @@ void setup() {
   // Timer1.start();
 
   // Initial servo positions
-  servoPos.base     = 35;
-  servoPos.elbow    = 150;
-  servoPos.wrist    = 180;
-  servoPos.gripper  = 15;
+  // servoPos.base     = 35;
+  // servoPos.elbow    = 150;
+  // servoPos.wrist    = 180;
+  // servoPos.gripper  = 15;
+
+  servoPos.base     = 90;
+  servoPos.elbow    = 90;
+  servoPos.wrist    = 90;
+  servoPos.gripper  = 90;
 
   // Starts serial connection
   
@@ -223,8 +228,7 @@ void setup() {
   // Serial.println("Vl2 found!");
 
 
-  svWrist.detach();
-  svGripper.detach();
+
   
   
 
@@ -236,17 +240,16 @@ void setup() {
 
 
 
-  Serial.print("hi");
   
   // Timer1.stop();
 
   
 
-
   
+
 }
 
 void loop() {
  
- 
+  
 }
