@@ -19,10 +19,10 @@ const int uStep2 = 18;
 const int enableVl2 = 2;
 
 // Servo pins
-const int servo1Pin  = 1;
+const int servo1Pin  = 6;
 const int servo2Pin  = 2;
-const int servo3Pin  = 3;
-const int servoGrPin = 4;
+const int servo3Pin  = 4;
+const int servoGrPin = 5;
 
 const int ledPin     = 31;
 
@@ -40,7 +40,7 @@ Servo svGripper;
 
 // Creates vl1 instance for VL6180 distance sensor 
 Adafruit_VL6180X vl1 = Adafruit_VL6180X();
-Adafruit_VL6180X vl2 = Adafruit_VL6180X();
+// Adafruit_VL6180X vl2 = Adafruit_VL6180X();
 
 // Custom variable type for diabolo orientation
 typedef enum {HORIZONTAL, VERTICAL} ORIENTATION;
@@ -107,7 +107,7 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
   
 
   // Read sensor to check orientation and if it matches the orientation of the diabolo that needs to be picked up execude code to do so
-  if(vl2.readRange() > 80 && dirDiabolo == HORIZONTAL){
+  if(vl1.readRange() > 80 && dirDiabolo == HORIZONTAL){
 
     // Position sequence to pick up the diabolo
     servoPos.base     = 50;
@@ -201,19 +201,19 @@ void setup() {
   }
   Serial.println("Vl1 found!");
 
-  vl1.setAddress(0x30);
+  // vl1.setAddress(0x30);
 
-  // !!!VL2!!!
-  // Enables ToF sensor vl2 and wait for it to start
-  digitalWrite(enableVl2, HIGH);
-  delay(50);
+  // // !!!VL2!!!
+  // // Enables ToF sensor vl2 and wait for it to start
+  // digitalWrite(enableVl2, HIGH);
+  // delay(50);
 
-  // Begins communication with ToF sensor vl2
-  if (!vl2.begin()) {
-    Serial.println("Failed to find vl2");
-    while (1);
-  }
-  Serial.println("Vl2 found!");
+  // // Begins communication with ToF sensor vl2
+  // if (!vl2.begin()) {
+  //   Serial.println("Failed to find vl2");
+  //   while (1);
+  // }
+  // Serial.println("Vl2 found!");
 
   
   
@@ -229,6 +229,6 @@ void setup() {
 }
 
 void loop() {
-
+  scanAndPickup(HORIZONTAL, RIGHT);
 
 }
