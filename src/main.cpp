@@ -182,10 +182,10 @@ void setup() {
   digitalWrite(uStep2, LOW);
   
   // Sets pinmodes
-  pinMode(enableVl2, OUTPUT);
+  // pinMode(enableVl2, OUTPUT);
 
   // Disables ToF sensor vl2 and colour sensor
-  digitalWrite(enableVl2, LOW);
+  // digitalWrite(enableVl2, LOW);
 
   // Waits for serial before continuing the program
   while (!Serial) {
@@ -226,9 +226,15 @@ void setup() {
 
   
   Timer1.stop();
+
+
+  servoPos.base = 60;
+  servoPos.elbow = 60;
+  servoPos.wrist = 20;
+  updateServoPos();
 }
 
 void loop() {
-  scanAndPickup(HORIZONTAL, RIGHT);
+  
 
 }
