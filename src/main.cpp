@@ -155,43 +155,45 @@ void setup() {
   }
   Serial.println("Vl1 found!");
 
-  // pinMode(ledPin, OUTPUT);
+  pinMode(ledPin, OUTPUT);
 
-  // Timer1.initialize(50); // initialize timer1, and set a 1 second period
+  Timer1.initialize(50); // initialize timer1, and set a 1 second period
 
-  // Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
+  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
 
-  // Timer1.start();
+  Timer1.start();
 
   // Initial servo positions
-  // servoPos.base     = 35;
-  // servoPos.elbow    = 150;
-  // servoPos.wrist    = 180;
-  // servoPos.gripper  = 15;
+  servoPos.base     = 35;
+  servoPos.elbow    = 150;
+  servoPos.wrist    = 180;
+  servoPos.gripper  = 15;
 
-  servoPos.base     = 90;
-  servoPos.elbow    = 90;
-  servoPos.wrist    = 90;
-  servoPos.gripper  = 90;
+  // servoPos.base     = 90;
+  // servoPos.elbow    = 90;
+  // servoPos.wrist    = 90;
+  // servoPos.gripper  = 20;
 
   // Starts serial connection
   
   // Attaches servo instances and set them to initial positions
-  svBase.attach(servo1Pin, 500, 2500);
-  svBase.write(servoPos.base);
-  delay(100);
+  // svBase.attach(servo1Pin, 500, 2500);
+  // svBase.write(servoPos.base);
+  // delay(100);
 
-  svElbow.attach(servo2Pin, 500, 2500);
-  svElbow.write(servoPos.elbow);
-  delay(100);
+  // svElbow.attach(servo2Pin, 500, 2500);
+  // svElbow.write(servoPos.elbow);
+  // delay(100);
 
-  svWrist.attach(servo3Pin, 500, 2500);
-  svWrist.write(servoPos.wrist);
-  delay(100);
+  // svWrist.attach(servo3Pin, 500, 2500);
+  // svWrist.write(servoPos.wrist);
+  // delay(100);
 
-  svGripper.attach(servoGrPin, 500, 2500);
-  svGripper.write(servoPos.gripper);
-  delay(100);
+  // svGripper.attach(servoGrPin, 500, 2500);
+  // svGripper.write(servoPos.gripper);
+  // delay(100);
+
+  
 
 
   // Sets Microsteppins as output
@@ -241,7 +243,7 @@ void setup() {
 
 
   
-  // Timer1.stop();
+  Timer1.stop();
 
   
 
@@ -250,6 +252,18 @@ void setup() {
 }
 
 void loop() {
+
+  uint8_t range = vl1.readRange();
+  
+
+  
+  Serial.print("Range: "); Serial.println(range);
+  
+
+  // Some error occurred, print it out!
+  
+  
+  delay(50);
  
   
 }
