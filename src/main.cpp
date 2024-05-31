@@ -20,11 +20,11 @@ const int enableVl2 = 2;
 
 // Servo pins
 const int servo1Pin  = 6;
-const int servo2Pin  = 2;
-const int servo3Pin  = 4;
+const int servo2Pin  = 4;
+const int servo3Pin  = 2;
 const int servoGrPin = 5;
 
-const int ledPin     = 31;
+const int ledPin     = 45;
 
 // Defines motor interface type
 #define motorInterfaceType 1
@@ -62,10 +62,13 @@ void updateServoPos(){
   svWrist.write(servoPos.wrist);
   svGripper.write(servoPos.gripper);
 
-  Serial.print(servoPos.base);
-  Serial.print(" ");
-  Serial.print(servoPos.elbow);
-  Serial.print(servoPos.wrist);
+  Serial.print("Base: ");
+  Serial.println(servoPos.base);
+  Serial.print("Elbow: ");
+  Serial.println(servoPos.elbow);
+  Serial.print("Wrist: ");
+  Serial.println(servoPos.wrist);
+  Serial.print("Gripper: ");
   Serial.println(servoPos.gripper);
 }
 
@@ -74,7 +77,7 @@ typedef enum {LEFT, RIGHT} SIDE;
 
 // Function for picking up a diabolo where "dirDiabolo" is the orientation of the diabolo and "side" is the side to scan
 void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
-  Timer1.start();
+  //Timer1.start();
   // Decide side to pick up the diabolo
   int dir;
   if(side == LEFT){
@@ -127,7 +130,7 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
   }
 
 
-  Timer1.stop();
+  //Timer1.stop();
 }
 
 void blink(){
@@ -136,23 +139,38 @@ void blink(){
 
 void setup() {
 
-  // pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
 
-  // Timer1.initialize(200); // initialize timer1, and set a 1 second period
 
-  // Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
+  while (!Serial) {
+    delay(1);
+  }
 
-  // Timer1.start();
+  delay(20);
+  // !!!VL1!!!
+  // Begins communication with ToF sensor vl1
+  if (!vl1.begin()) {
+    Serial.println("Failed to find vl1");
+    while (1);
+  }
+  Serial.println("Vl1 found!");
+
+  pinMode(ledPin, OUTPUT);
+
+  Timer1.initialize(50); // initialize timer1, and set a 1 second period
+
+  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
+
+  Timer1.start();
 
   // Initial servo positions
-  servoPos.base     = 0;
-  servoPos.elbow    = 30;
-  servoPos.wrist    = 0;
+  servoPos.base     = 35;
+  servoPos.elbow    = 150;
+  servoPos.wrist    = 180;
   servoPos.gripper  = 15;
 
   // Starts serial connection
-  Serial.begin(9600);
-
+  
   // Attaches servo instances and set them to initial positions
   svBase.attach(servo1Pin, 500, 2500);
   svBase.write(servoPos.base);
@@ -188,18 +206,7 @@ void setup() {
   // digitalWrite(enableVl2, LOW);
 
   // Waits for serial before continuing the program
-  while (!Serial) {
-    delay(1);
-  }
-
-  delay(20);
-  // !!!VL1!!!
-  // Begins communication with ToF sensor vl1
-  if (!vl1.begin()) {
-    Serial.println("Failed to find vl1");
-    while (1);
-  }
-  Serial.println("Vl1 found!");
+  
 
   // vl1.setAddress(0x30);
 
@@ -225,13 +232,10 @@ void setup() {
 	turnStepper.setSpeed(1000);
 
   
-  // Timer1.stop();
+  Timer1.stop();
 
 
-  servoPos.base = 60;
-  servoPos.elbow = 60;
-  servoPos.wrist = 20;
-  updateServoPos();
+  
 }
 
 void loop() {
