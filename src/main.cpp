@@ -7,7 +7,7 @@
 #include <TimerOne.h>
 
 // Pins for stepper motor
-const int dirPin  = 16;
+const int dirPin  = 14;
 const int stepPin = 15;
 
 // MicroStep pins for stepper motor
@@ -94,23 +94,24 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
   }
 
   // Define arm joint positions for scanning the diabolo
-  servoPos.elbow = 60;
-  servoPos.wrist = 20;
-  servoPos.gripper = 40;
+  servoPos.base     = 35;
+  servoPos.elbow    = 150;
+  servoPos.wrist    = 160;
+  servoPos.gripper  = 50;
   updateServoPos();
 
   // Rotate arm to scan for diabolo
   turnStepper.moveTo(dir*140);
 
   // Keep rotating arm till sesor detects diabolo
-  while(vl1.readRange() > 80){
+  while(vl1.readRange() > 140){
     turnStepper.run();
   }
   turnStepper.stop();
   
 
   // Read sensor to check orientation and if it matches the orientation of the diabolo that needs to be picked up execude code to do so
-  if(vl1.readRange() > 80 && dirDiabolo == HORIZONTAL){
+  if(vl1.readRange() > 100 && dirDiabolo == HORIZONTAL){
 
     // Position sequence to pick up the diabolo
     servoPos.base     = 50;
@@ -202,7 +203,7 @@ void setup() {
   pinMode(uStep2, OUTPUT);
 
   // Sets 1/4 microstepping
-  digitalWrite(uStep0, HIGH);
+  digitalWrite(uStep0, LOW);
   digitalWrite(uStep1, HIGH);
   digitalWrite(uStep2, LOW);
   
@@ -237,7 +238,7 @@ void setup() {
   // set the maximum speed, acceleration factor,
 	// initial speed and the target position
 	turnStepper.setMaxSpeed(1000);
-	turnStepper.setAcceleration(1000);
+	turnStepper.setAcceleration(200);
 	turnStepper.setSpeed(1000);
 
 
@@ -245,25 +246,19 @@ void setup() {
   
   Timer1.stop();
 
-  
 
+
+  
   
 
 }
 
 void loop() {
 
-  uint8_t range = vl1.readRange();
-  
+  // scanAndPickup(HORIZONTAL, LEFT);
 
   
-  Serial.print("Range: "); Serial.println(range);
-  
-
-  // Some error occurred, print it out!
   
   
-  delay(50);
- 
   
 }
