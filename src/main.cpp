@@ -257,6 +257,16 @@ void loop() {
 
   // scanAndPickup(HORIZONTAL, LEFT);
 
+  turnStepper.move(900);
+  while(turnStepper.distanceToGo() > 0){
+    turnStepper.run();
+  }
+
+  turnStepper.move(-900);
+  while(turnStepper.distanceToGo() > 0){
+    turnStepper.run();
+  }
+
   
   
   
