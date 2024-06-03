@@ -22,7 +22,7 @@ const int uStep2 = 20;
 // Creates a stepper instance
 AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
-void setup(){
+void setup() {
 
 
   // Sets Microsteppins as output
