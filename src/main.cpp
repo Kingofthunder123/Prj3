@@ -26,11 +26,12 @@ const int servoGrPin = 7;
 
 const int ledPin     = 45;
 
+
+int steps;
 // Defines motor interface type
 #define motorInterfaceType 1
 
 // Creates a stepper instance
-AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
 // Creates servo instances for all joints
 Servo svBase;
@@ -56,6 +57,27 @@ struct Pos{
 // Positions of all servo's
 Pos servoPos;
 
+void stepperStep(int stepDelay){
+
+  if(steps > 0){
+
+    digitalWrite(stepPin, HIGH);
+    delayMicroseconds(stepDelay);
+    digitalWrite(stepPin, LOW);
+    delayMicroseconds(stepDelay);
+
+    steps--;
+  }
+  
+}
+
+void setStepTarget(bool withClock, int newSteps){
+  digitalWrite(dirPin, withClock);
+
+  steps = newSteps;
+
+}
+
 void updateServoPos(){
   svBase.write(servoPos.base);
   svElbow.write(servoPos.elbow);
@@ -79,56 +101,68 @@ typedef enum {LEFT, RIGHT} SIDE;
 void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
   //Timer1.start();
   // Decide side to pick up the diabolo
-  int dir;
+  bool dir;
   if(side == LEFT){
-    dir = -1;
+    dir = false;
   }
   else{
-    dir = 1;
+    dir = true;
   }
 
   // Rotate arm to avoid support bracket
-  turnStepper.moveTo(dir*20);
-  while(turnStepper.distanceToGo() != 0){
-    turnStepper.run();
+
+  setStepTarget(dir, 60);
+  while(steps > 0){
+    stepperStep(1200);
   }
 
-  // Define arm joint positions for scanning the diabolo
-  servoPos.base     = 35;
-  servoPos.elbow    = 150;
-  servoPos.wrist    = 160;
-  servoPos.gripper  = 50;
+
+  delay(200);
+
+  servoPos.base     = 16;
+  servoPos.elbow    = 160;
+  servoPos.wrist    = 150;
+  servoPos.gripper  = 40;
   updateServoPos();
 
-  // Rotate arm to scan for diabolo
-  turnStepper.moveTo(dir*140);
+  delay(200);
 
   // Keep rotating arm till sesor detects diabolo
-  while(vl1.readRange() > 140){
-    turnStepper.run();
+  setStepTarget(dir, 500);
+  while(1){
+    stepperStep(400);
+    
+    Serial.println(vl1.readRange());
   }
-  turnStepper.stop();
   
 
   // Read sensor to check orientation and if it matches the orientation of the diabolo that needs to be picked up execude code to do so
-  if(vl1.readRange() > 100 && dirDiabolo == HORIZONTAL){
+  // if(vl1.readRange() > 70 && dirDiabolo == HORIZONTAL){
 
-    // Position sequence to pick up the diabolo
-    servoPos.base     = 50;
-    servoPos.elbow    = 50;
-    servoPos.wrist    = 120;
-    updateServoPos();
+  //   Serial.println("grip");
 
-    delay(100);
-    servoPos.base     = 20;
-    servoPos.elbow    = 50;
-    servoPos.wrist    = 120;
-    updateServoPos();
+  //   delay(200);
 
-    delay(100);
-    servoPos.gripper = 15;
-    updateServoPos();
-  }
+  //   // Position sequence to pick up the diabolo
+  //   servoPos.base     = 15;
+  //   updateServoPos();
+
+  //   delay(200);
+
+  //   servoPos.gripper = 15;
+  //   updateServoPos();
+
+  //   delay(300);
+
+  //   servoPos.base     = 35;
+  //   servoPos.elbow    = 150;
+  //   servoPos.wrist    = 180;
+  //   servoPos.gripper  = 15;
+  //   updateServoPos();
+
+    
+  // }
+
 
 
   //Timer1.stop();
@@ -178,21 +212,21 @@ void setup() {
   // Starts serial connection
   
   // Attaches servo instances and set them to initial positions
-  // svBase.attach(servo1Pin, 500, 2500);
-  // svBase.write(servoPos.base);
-  // delay(100);
+  svBase.attach(servo1Pin, 500, 2500);
+  svBase.write(servoPos.base);
+  delay(100);
 
-  // svElbow.attach(servo2Pin, 500, 2500);
-  // svElbow.write(servoPos.elbow);
-  // delay(100);
+  svElbow.attach(servo2Pin, 500, 2500);
+  svElbow.write(servoPos.elbow);
+  delay(100);
 
-  // svWrist.attach(servo3Pin, 500, 2500);
-  // svWrist.write(servoPos.wrist);
-  // delay(100);
+  svWrist.attach(servo3Pin, 500, 2500);
+  svWrist.write(servoPos.wrist);
+  delay(100);
 
-  // svGripper.attach(servoGrPin, 500, 2500);
-  // svGripper.write(servoPos.gripper);
-  // delay(100);
+  svGripper.attach(servoGrPin, 500, 2500);
+  svGripper.write(servoPos.gripper);
+  delay(100);
 
   
 
@@ -237,17 +271,13 @@ void setup() {
 
   // set the maximum speed, acceleration factor,
 	// initial speed and the target position
-	turnStepper.setMaxSpeed(1000);
-	turnStepper.setAcceleration(200);
-	turnStepper.setSpeed(1000);
-
 
 
   
   Timer1.stop();
 
 
-
+  delay(300);
   
   
 
@@ -255,20 +285,10 @@ void setup() {
 
 void loop() {
 
+
   // scanAndPickup(HORIZONTAL, LEFT);
-
-  turnStepper.move(900);
-  while(turnStepper.distanceToGo() > 0){
-    turnStepper.run();
-  }
-
-  turnStepper.move(-900);
-  while(turnStepper.distanceToGo() > 0){
-    turnStepper.run();
-  }
-
   
-  
+  Serial.println(vl1.readRange());
   
   
 }
