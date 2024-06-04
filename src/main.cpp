@@ -97,8 +97,109 @@ void updateServoPos(){
 // Custom variable to indicate the side to scan for the diabolo
 typedef enum {LEFT, RIGHT} SIDE;
 
+bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
+
+  
+  servoPos.wrist = 135;
+  updateServoPos();
+
+  delay(100);
+  
+  if(vl1.readRange() > 200 ){
+
+    Serial.println("grip");
+
+    delay(200);
+
+    servoPos.base     = 30;
+    servoPos.elbow    = 180;
+    servoPos.wrist    = 145;
+    servoPos.gripper  = 40;
+    updateServoPos();
+    
+
+    delay(200);
+
+    servoPos.base = 17;
+    updateServoPos();
+
+    servoPos.gripper = 15;
+    updateServoPos();
+
+    delay(300);
+
+    servoPos.base     = 45;
+    servoPos.elbow    = 150;
+    servoPos.wrist    = 180;
+    servoPos.gripper  = 15;
+    updateServoPos();
+
+    
+  }
+
+  if(vl1.readRange() < 200 ){
+
+    Serial.println("grip");
+
+    delay(200);
+
+    // Position sequence to pick up the diabolo
+    servoPos.wrist = 45;
+    servoPos.base = 0;
+    updateServoPos();
+
+    delay(300);
+
+
+    for(int i = servoPos.elbow; i > 135; i --){
+      servoPos.elbow = i;
+      updateServoPos();
+      delay(10);
+    }
+    
+
+    delay(200);
+
+    servoPos.gripper = 15;
+    updateServoPos();
+
+    delay(300);
+
+    servoPos.base     = 45;
+    updateServoPos();
+
+    delay(200);
+
+    setStepTarget(!clockwise, 770);
+    while(steps > 0){
+      stepperStep(1200);
+      Serial.println(steps);
+    }
+
+    delay(200);
+
+    servoPos.base = 0;
+    servoPos.elbow = 155;
+    updateServoPos();
+
+    delay(400);
+    servoPos.gripper = 50;
+    servoPos.wrist = 40;
+    updateServoPos();
+
+    delay(200);
+    servoPos.elbow = 170;
+    servoPos.wrist = 20;
+    updateServoPos();
+
+
+    
+  }
+}
+
+
 // Function for picking up a diabolo where "dirDiabolo" is the orientation of the diabolo and "side" is the side to scan
-void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
+void scan(ORIENTATION dirDiabolo, SIDE side){
   //Timer1.start();
   // Decide side to pick up the diabolo
   bool dir;
@@ -111,7 +212,7 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
 
   // Rotate arm to avoid support bracket
 
-  setStepTarget(dir, 60);
+  setStepTarget(dir, 100);
   while(steps > 0){
     stepperStep(1200);
   }
@@ -120,48 +221,35 @@ void scanAndPickup(ORIENTATION dirDiabolo, SIDE side){
   delay(200);
 
   servoPos.base     = 16;
-  servoPos.elbow    = 160;
-  servoPos.wrist    = 150;
-  servoPos.gripper  = 40;
+  servoPos.elbow    = 170;
+  servoPos.wrist    = 145;
+  servoPos.gripper  = 50;
   updateServoPos();
 
   delay(200);
 
   // Keep rotating arm till sesor detects diabolo
+
   setStepTarget(dir, 500);
-  while(1){
-    stepperStep(400);
+  while(vl1.readRange() > 150){
+    for(int i = 10; i > 0; i --){
+      stepperStep(1200);
+    }
     
-    Serial.println(vl1.readRange());
   }
+
+  setStepTarget(dir, 25);
+  while(steps > 0){
+    stepperStep(1200);
+  }
+
+  pickUp(dirDiabolo, dir);
+  
   
 
+
   // Read sensor to check orientation and if it matches the orientation of the diabolo that needs to be picked up execude code to do so
-  // if(vl1.readRange() > 70 && dirDiabolo == HORIZONTAL){
 
-  //   Serial.println("grip");
-
-  //   delay(200);
-
-  //   // Position sequence to pick up the diabolo
-  //   servoPos.base     = 15;
-  //   updateServoPos();
-
-  //   delay(200);
-
-  //   servoPos.gripper = 15;
-  //   updateServoPos();
-
-  //   delay(300);
-
-  //   servoPos.base     = 35;
-  //   servoPos.elbow    = 150;
-  //   servoPos.wrist    = 180;
-  //   servoPos.gripper  = 15;
-  //   updateServoPos();
-
-    
-  // }
 
 
 
@@ -286,9 +374,9 @@ void setup() {
 void loop() {
 
 
-  // scanAndPickup(HORIZONTAL, LEFT);
+  scan(HORIZONTAL, RIGHT);
   
-  Serial.println(vl1.readRange());
+  while(1);
   
   
 }
