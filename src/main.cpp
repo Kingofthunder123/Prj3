@@ -5,6 +5,10 @@
 #include <AccelStepper.h>
 #include <Adafruit_TCS34725.h>
 #include <TimerOne.h>
+#include <QTRSensors.h>
+
+QTRSensors qtr;
+
 
 // Pins for stepper motor
 const int dirPin  = 14;
@@ -34,6 +38,64 @@ long int stepsTaken;
 // Defines motor interface type
 #define motorInterfaceType 1
 
+
+#define dirPinA 12
+#define dirPinB 13
+
+#define pwmPinA  3
+#define pwmPinB 11
+
+#define brkPinA  9
+#define brkPinB  8
+
+#define curPinA A0
+#define curPinB A1
+
+#define strtBtn 41
+
+#define SwithFast 43
+
+const uint8_t SensorCount = 8;
+uint16_t sensorValues[SensorCount];
+
+
+
+// PARAMETERS
+// VVVVVVVVVV
+
+// PID parameters
+int defSpd  = 220; // Default speed. The speed setting for straght lines.
+int RturnSpd; // Turning speed. The speed setting for corners.
+int LturnSpd;
+int error;
+int lastError = 0;
+
+// Speed settings
+int maxSpeed = 220;
+int rotationSpeed = 150;
+int stopSpeed = 50;
+
+// Delays
+int allignDel = 1;
+int pauzeDel = 5000;
+int turnDelay = 20;
+int preTurnSpeed = 90;
+
+
+// CUSTOM VARIABLES
+// VVVVVVVVVVVVVVVV
+
+typedef enum {MOTOR_R, MOTOR_L} SELECT_MOTOR;
+typedef enum {FORWARD, REVERSE} DIRECTION;
+
+// Custom variable to indicate the side to scan for the diabolo
+typedef enum {LEFT, RIGHT} SIDE;
+typedef enum {HORIZONTAL, VERTICAL} ORIENTATION;
+
+bool stop = false;
+
+int normArray[8];
+
 // Creates a stepper instance
 
 // Creates servo instances for all joints
@@ -47,7 +109,7 @@ Adafruit_VL6180X vl1 = Adafruit_VL6180X();
 // Adafruit_VL6180X vl2 = Adafruit_VL6180X();
 
 // Custom variable type for diabolo orientation
-typedef enum {HORIZONTAL, VERTICAL} ORIENTATION;
+
 
 // Structure to define all servo angles in a single instance
 struct Pos{
@@ -62,6 +124,8 @@ Pos servoPos;
 
 Pos newPos;
 
+// FUNCTIONS
+// VVVVVVVVV
 void stepperStep(int stepDelay){
 
 
@@ -134,8 +198,6 @@ void updateServoPos(){
   }
 }
 
-// Custom variable to indicate the side to scan for the diabolo
-typedef enum {LEFT, RIGHT} SIDE;
 
 bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
@@ -162,7 +224,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     updateServoPos();
     delay(200);
 
-    newPos.base = 11;
+    newPos.base = 17;
     updateServoPos();
     delay(200);
 
@@ -171,7 +233,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
     delay(300);
 
-    newPos.base     = 45;
+    newPos.base     = 50;
     newPos.elbow    = 170;
     newPos.wrist    = 180;
     newPos.gripper  = 15;
@@ -183,7 +245,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
       Serial.println(steps);
     }
     
-    newPos.base = 10;
+    newPos.base = 14;
     newPos.elbow = 130;
     newPos.wrist    = 180;
     updateServoPos();
@@ -223,8 +285,10 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     // Position sequence to pick up the diabolo
     newPos.wrist = 105;
     updateServoPos();
+    newPos.base = 9;
     newPos.wrist = 34;
-    newPos.base = 0;
+    updateServoPos();
+    newPos.base = 3;
     updateServoPos();
 
     delay(300);
@@ -245,6 +309,12 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     delay(200);
 
     if(lastOne){
+
+      newPos.base = 40;
+      newPos.elbow = 145;
+      newPos.wrist    = 180;
+      updateServoPos();
+
       return(1);
     }
 
@@ -257,7 +327,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     delay(200);
 
     newPos.base = 0;
-    newPos.elbow = 155;
+    newPos.elbow = 145;
     updateServoPos();
 
     delay(400);
@@ -311,7 +381,7 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
 
   delay(200);
 
-  newPos.base     = 14;
+  newPos.base     = 18;
   newPos.elbow    = 165;
   newPos.wrist    = 150;
   newPos.gripper  = 70;
@@ -353,39 +423,168 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
   //Timer1.stop();
 }
 
+// Change the speed depending on the current switch position  (fast or slow)
+void speedControl() {
+  if(digitalRead(SwithFast) == HIGH){
+    defSpd = 255;
+    rotationSpeed = 180;
+    stopSpeed = 15;
+    turnDelay = 175;
+    preTurnSpeed = 90;
+  }
+  else {
+    defSpd = 255;
+    rotationSpeed = 140;
+    stopSpeed = 15;
+    turnDelay = 100;
+    preTurnSpeed = 100;
+  }
+
+}
+
+// Function to simplify the motor control
+void driveMotor(SELECT_MOTOR motor, DIRECTION dirSel, int power, bool brake = false){
+
+  int dir = 0;
+  int pwm = 0;
+  int brk = 0;
+
+  if(motor == MOTOR_R){
+    dir = 12;
+    pwm = 3;
+    brk = 9;
+  }
+  else{
+    dir = 13;
+    pwm = 11;
+    brk = 8;
+  }
+
+
+  if(dirSel == FORWARD){
+    digitalWrite(dir, HIGH);
+  }
+  else{
+    digitalWrite(dir, LOW);
+  }
+
+  analogWrite(pwm, power);
+
+  digitalWrite(brk, brake);
+
+}
+
+// MOST IMPORTANT FUNCTION to make the turn
+int makeTurn(){
+
+  SELECT_MOTOR turnFor;
+  SELECT_MOTOR turnRev;
+
+  if((normArray[0] == 1  && normArray[7] == 0)){
+    Serial.println("RIGHT");
+    turnFor = MOTOR_R;
+    turnRev = MOTOR_L;
+  }
+  else if((normArray[0] == 0  && normArray[7] == 1)){
+    Serial.println("LEFT");
+    turnFor = MOTOR_L;
+    turnRev = MOTOR_R;
+  }
+  else{
+    return(0);
+  }
+
+  Serial.println("turning");
+
+  driveMotor(turnFor, FORWARD, preTurnSpeed);
+  driveMotor(turnRev, FORWARD, preTurnSpeed);
+
+  //DO NOT CHANGE!!!
+  delay(turnDelay);
+
+  // unsigned int stepNrStart = nrStepsA;
+
+  // while(nrStepsA < stepNrStart + stepGoal){
+  // }
+  
+  driveMotor(MOTOR_R, FORWARD, 0, true);
+  driveMotor(MOTOR_L, FORWARD, 0, true);
+
+
+  
+  driveMotor(turnFor, FORWARD, rotationSpeed);
+  driveMotor(turnRev, REVERSE, rotationSpeed);
+  
+  
+
+  qtr.readLineBlack(sensorValues);
+  
+  int stopt = 0;
+
+  while(stopt == 0){
+    
+    qtr.readLineBlack(sensorValues);
+    if(sensorValues[3] > 800 || sensorValues[4] > 800 ){
+      stopt = 1;
+    }
+  }
+
+  
+
+  return(0);
+}
+
+// Refresh sensor
+void readSensor(unsigned int threshold){
+  qtr.readLineBlack(sensorValues);
+  
+  for(int i = 0; i < SensorCount; i++){
+    
+    if(sensorValues[i] >= threshold){
+      normArray[i] = 1;
+    }
+    else{
+      normArray[i] = 0;
+    }
+    Serial.print(normArray[i]);
+    Serial.print(" ");
+  }
+
+  Serial.println();
+}
+
+// PID control function
+void PIDSteer(){
+  //PID control
+
+  uint16_t position = qtr.readLineBlack(sensorValues);
+
+  error = position - 3500;
+
+  RturnSpd = defSpd - (2 * error + 3 * (error - lastError));
+  LturnSpd = defSpd + (2 * error + 3 * (error - lastError));
+
+  lastError = error;
+    
+  if(RturnSpd > maxSpeed){
+    RturnSpd = maxSpeed;
+  }
+  if(LturnSpd > maxSpeed){
+    LturnSpd = maxSpeed;
+  }
+
+  driveMotor(MOTOR_R, FORWARD, RturnSpd);
+  driveMotor(MOTOR_L, FORWARD, LturnSpd);
+
+}
+
 void blink(){
   digitalWrite(ledPin, !digitalRead(ledPin));
 }
 
-void setup() {
-
-  Serial.begin(9600);
-
-
-  while (!Serial) {
-    delay(1);
-  }
-
-  delay(20);
-  // !!!VL1!!!
-  // Begins communication with ToF sensor vl1
-  if (!vl1.begin()) {
-    Serial.println("Failed to find vl1");
-    while (1);
-  }
-  Serial.println("Vl1 found!");
-
-  pinMode(ledPin, OUTPUT);
-
-  Timer1.initialize(50); // initialize timer1, and set a 1 second period
-
-  Timer1.attachInterrupt(blink); // attaches Blink() as a timer interrupt function
-
-  Timer1.start();
-
-  // Initial servo positions
-  newPos.base     = 35;
-  servoPos.base   = 35;
+void exePauze(){
+  newPos.base     = 40;
+  servoPos.base   = 40;
 
   newPos.elbow    = 150;
   servoPos.elbow = 150;
@@ -406,7 +605,7 @@ void setup() {
   // Attaches servo instances and set them to initial positions
   svBase.attach(servo1Pin, 500, 2500);
   svBase.write(servoPos.base);
-  delay(100);
+  delay(200);
 
   svElbow.attach(servo2Pin, 500, 2500);
   svElbow.write(newPos.elbow);
@@ -432,6 +631,147 @@ void setup() {
   digitalWrite(uStep0, LOW);
   digitalWrite(uStep1, HIGH);
   digitalWrite(uStep2, LOW);
+
+  while (!Serial) {
+    delay(1);
+  }
+
+  delay(20);
+  // !!!VL1!!!
+  // Begins communication with ToF sensor vl1
+  if (!vl1.begin()) {
+    Serial.println("Failed to find vl1");
+    while (1);
+  }
+  Serial.println("Vl1 found!");
+
+
+  scan(VERTICAL, LEFT);
+
+      setStepTarget(0, abs(stepsTaken) + 100);
+      while(steps != 0){
+        stepperStep(800);
+      }
+      
+      delay(3000);
+
+      scan(HORIZONTAL, RIGHT);
+
+      setStepTarget(1, abs(stepsTaken));
+      while(steps != 0){
+        stepperStep(800);
+      }
+
+      lastOne = true;
+
+
+      scan(VERTICAL, RIGHT);
+
+      setStepTarget(0, abs(stepsTaken) - 75);
+      while(steps != 0){
+        stepperStep(800);
+      }
+}
+
+void pauzeStop(){
+  if(normArray[0] == 1 && normArray[7] == 1){
+      
+    driveMotor(MOTOR_R, FORWARD, 0, true);
+    driveMotor(MOTOR_L, FORWARD, 0, true);
+
+    delay(10);
+
+    driveMotor(MOTOR_R, FORWARD, stopSpeed);
+    driveMotor(MOTOR_L, FORWARD, stopSpeed);
+
+    int starttime = millis();
+
+    while(normArray[0] == 1 || normArray[7] == 1){
+      readSensor(700);
+    }
+    int endTime = millis();
+
+    delay(allignDel);
+
+    driveMotor(MOTOR_R, FORWARD, 0, true);
+    driveMotor(MOTOR_L, FORWARD, 0, true);
+
+      
+    // millis delay for the pause
+    if(endTime - starttime < 500){
+      stop = false;
+
+      exePauze();
+
+      
+  
+    }
+    else{
+      stop = true;
+    }
+  }
+
+  for(int i = 0; i < SensorCount; i++){
+    Serial.print(normArray[i]);
+    Serial.print("\t");
+  }
+
+}
+
+
+
+
+
+
+
+
+
+void setup() {
+
+  Serial.begin(9600);
+
+
+  Serial.begin(9600);
+
+  pinMode(dirPinA, OUTPUT);
+  pinMode(dirPinB, OUTPUT);
+
+  pinMode(pwmPinA, OUTPUT);
+  pinMode(pwmPinB, OUTPUT);
+
+  pinMode(brkPinA, OUTPUT);
+  pinMode(brkPinB, OUTPUT);
+
+  pinMode(curPinA, INPUT);
+  pinMode(curPinB, INPUT);
+
+  pinMode(SwithFast, INPUT);
+
+  
+  
+
+  qtr.setTypeAnalog();
+  qtr.setSensorPins((const uint8_t[]){A8, A9, A10, A11, A12, A13, A14, A15}, SensorCount);
+  qtr.setEmitterPin(47);
+
+  delay(500);
+
+  pinMode(45, OUTPUT);
+  
+  digitalWrite(45, HIGH);
+
+  for (uint16_t i = 0; i < 150; i++){
+    qtr.calibrate();
+    Serial.println(i);
+  }
+
+  
+  digitalWrite(45, LOW);
+
+
+  
+ 
+  // Initial servo positions
   
   // Sets pinmodes
   // pinMode(enableVl2, OUTPUT);
@@ -466,8 +806,6 @@ void setup() {
 
 
   
-  Timer1.stop();
-
 
   delay(300);
   
@@ -477,34 +815,33 @@ void setup() {
 
 void loop() {
 
+   while(digitalRead(strtBtn) != HIGH) {}
+  stop = false;
 
-  scan(VERTICAL, LEFT);
-
-  setStepTarget(0, abs(stepsTaken) + 100);
-  while(steps != 0){
-    stepperStep(800);
-  }
   
-  delay(3000);
 
-  scan(HORIZONTAL, RIGHT);
+  //main while loop
+  while(!stop){  
 
-  setStepTarget(1, abs(stepsTaken));
-  while(steps != 0){
-    stepperStep(800);
+    // PIDSteer();
+
+    // readSensor(750);
+
+    // makeTurn();
+
+    // pauzeStop();
+
+
+    exePauze();
+
+    
+    
+    stop = true;
+    
   }
 
-  lastOne = true;
 
-
-  scan(VERTICAL, RIGHT);
-
-  setStepTarget(0, abs(stepsTaken));
-  while(steps != 0){
-    stepperStep(800);
-  }
   
-  while(1);
   
   
 }
