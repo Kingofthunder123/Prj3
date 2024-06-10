@@ -26,8 +26,11 @@ const int servoGrPin = 7;
 
 const int ledPin     = 45;
 
+bool lastOne = false;
+
 
 int steps;
+long int stepsTaken;
 // Defines motor interface type
 #define motorInterfaceType 1
 
@@ -57,7 +60,10 @@ struct Pos{
 // Positions of all servo's
 Pos servoPos;
 
+Pos newPos;
+
 void stepperStep(int stepDelay){
+
 
   if(steps > 0){
 
@@ -65,6 +71,11 @@ void stepperStep(int stepDelay){
     delayMicroseconds(stepDelay);
     digitalWrite(stepPin, LOW);
     delayMicroseconds(stepDelay);
+
+    stepsTaken += -1*!digitalRead(dirPin) + digitalRead(dirPin);;
+    
+
+    
 
     steps--;
   }
@@ -75,23 +86,52 @@ void setStepTarget(bool withClock, int newSteps){
   digitalWrite(dirPin, withClock);
 
   steps = newSteps;
+  Serial.println(steps);
 
 }
 
 void updateServoPos(){
-  svBase.write(servoPos.base);
-  svElbow.write(servoPos.elbow);
-  svWrist.write(servoPos.wrist);
-  svGripper.write(servoPos.gripper);
 
-  Serial.print("Base: ");
-  Serial.println(servoPos.base);
-  Serial.print("Elbow: ");
-  Serial.println(servoPos.elbow);
-  Serial.print("Wrist: ");
-  Serial.println(servoPos.wrist);
-  Serial.print("Gripper: ");
-  Serial.println(servoPos.gripper);
+  
+
+  int baseStep = (newPos.base - servoPos.base)/abs(newPos.base - servoPos.base);
+  int elbowStep = (newPos.elbow - servoPos.elbow)/abs(newPos.elbow - servoPos.elbow);
+  int wristStep = (newPos.wrist - servoPos.wrist)/abs(newPos.wrist - servoPos.wrist);
+  int gripperStep = (newPos.gripper - servoPos.gripper)/abs(newPos.gripper - servoPos.gripper);
+  
+  
+  int stop = 0;
+  while(stop == 0){
+    stop = 1;
+
+    if (servoPos.base != newPos.base){
+      servoPos.base += baseStep;
+      svBase.write(servoPos.base);
+      stop = 0;
+    }
+
+    if (servoPos.elbow != newPos.elbow){
+      servoPos.elbow += elbowStep;
+      svElbow.write(servoPos.elbow);
+      stop = 0;
+    }
+
+    if (servoPos.wrist != newPos.wrist){
+      servoPos.wrist += wristStep;
+      svWrist.write(servoPos.wrist);
+      stop = 0;
+    }
+
+    if (servoPos.gripper != newPos.gripper){
+      servoPos.gripper += gripperStep;
+      svGripper.write(servoPos.gripper);
+      stop = 0;
+    }
+
+    delay(15);
+
+    
+  }
 }
 
 // Custom variable to indicate the side to scan for the diabolo
@@ -100,101 +140,151 @@ typedef enum {LEFT, RIGHT} SIDE;
 bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
   
-  servoPos.wrist = 135;
+
+  
+  newPos.wrist = 140;
   updateServoPos();
 
   delay(100);
   
-  if(vl1.readRange() > 200 ){
+  if(vl1.readRange() > 200 && dirDiabolo == HORIZONTAL){
 
-    Serial.println("grip");
-
-    delay(200);
-
-    servoPos.base     = 30;
-    servoPos.elbow    = 180;
-    servoPos.wrist    = 145;
-    servoPos.gripper  = 40;
-    updateServoPos();
     
 
     delay(200);
 
-    servoPos.base = 17;
+    newPos.base     = 30;
     updateServoPos();
+    
+    delay(200);
 
-    servoPos.gripper = 15;
+    newPos.elbow = 150;
+    updateServoPos();
+    delay(200);
+
+    newPos.base = 11;
+    updateServoPos();
+    delay(200);
+
+    newPos.gripper = 15;
     updateServoPos();
 
     delay(300);
 
-    servoPos.base     = 45;
-    servoPos.elbow    = 150;
-    servoPos.wrist    = 180;
-    servoPos.gripper  = 15;
+    newPos.base     = 45;
+    newPos.elbow    = 170;
+    newPos.wrist    = 180;
+    newPos.gripper  = 15;
     updateServoPos();
+
+    setStepTarget(!clockwise, 770);
+    while(steps > 0){
+      stepperStep(900);
+      Serial.println(steps);
+    }
+    
+    newPos.base = 10;
+    newPos.elbow = 130;
+    newPos.wrist    = 180;
+    updateServoPos();
+
+    newPos.gripper = 50;
+    updateServoPos();
+
+    newPos.base = 30;
+    updateServoPos();
+
+    return(1);
 
     
   }
 
-  if(vl1.readRange() < 200 ){
+  else if(vl1.readRange() < 200 && dirDiabolo == VERTICAL){
 
     Serial.println("grip");
 
-    delay(200);
-
-    // Position sequence to pick up the diabolo
-    servoPos.wrist = 45;
-    servoPos.base = 0;
-    updateServoPos();
-
-    delay(300);
-
-
-    for(int i = servoPos.elbow; i > 135; i --){
-      servoPos.elbow = i;
-      updateServoPos();
-      delay(10);
+    setStepTarget(clockwise, 40);
+    for(int i = 0; i < 40; i ++){
+      stepperStep(900);
+      Serial.println(steps);
     }
+    if(!clockwise){
+      setStepTarget(clockwise, 20);
+      for(int i = 0; i < 40; i ++){
+        stepperStep(900);
+        Serial.println(steps);
+      }
+    }
+
     
 
     delay(200);
 
-    servoPos.gripper = 15;
+    // Position sequence to pick up the diabolo
+    newPos.wrist = 105;
+    updateServoPos();
+    newPos.wrist = 34;
+    newPos.base = 0;
     updateServoPos();
 
     delay(300);
 
-    servoPos.base     = 45;
+
+    newPos.elbow = 110;
+    newPos.wrist = 55;
+    newPos.gripper = 15;
+    updateServoPos();
+    
+
+   
+    delay(300);
+
+    newPos.base     = 20;
     updateServoPos();
 
     delay(200);
 
-    setStepTarget(!clockwise, 770);
+    if(lastOne){
+      return(1);
+    }
+
+    setStepTarget(!clockwise, 800);
     while(steps > 0){
-      stepperStep(1200);
+      stepperStep(900);
       Serial.println(steps);
     }
 
     delay(200);
 
-    servoPos.base = 0;
-    servoPos.elbow = 155;
+    newPos.base = 0;
+    newPos.elbow = 155;
     updateServoPos();
 
     delay(400);
-    servoPos.gripper = 50;
-    servoPos.wrist = 40;
+    newPos.gripper = 50;
+    newPos.wrist = 40;
     updateServoPos();
 
     delay(200);
-    servoPos.elbow = 170;
-    servoPos.wrist = 20;
+    newPos.elbow = 170;
+    newPos.wrist = 20;
     updateServoPos();
-
-
     
+
+    setStepTarget(-1, 20);
+    while(steps > 0){
+    stepperStep(1200);
+    }
+
+    newPos.base = 20;
+    updateServoPos();
+    
+    return(1);
   }
+
+ 
+
+  return(0);
 }
 
 
@@ -215,35 +305,42 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
   setStepTarget(dir, 100);
   while(steps > 0){
     stepperStep(1200);
+    
   }
 
 
   delay(200);
 
-  servoPos.base     = 16;
-  servoPos.elbow    = 170;
-  servoPos.wrist    = 145;
-  servoPos.gripper  = 50;
+  newPos.base     = 14;
+  newPos.elbow    = 165;
+  newPos.wrist    = 150;
+  newPos.gripper  = 70;
   updateServoPos();
 
   delay(200);
 
   // Keep rotating arm till sesor detects diabolo
 
-  setStepTarget(dir, 500);
+  Serial.println("ji");
+
+  setStepTarget(dir, 800);
   while(vl1.readRange() > 150){
-    for(int i = 10; i > 0; i --){
-      stepperStep(1200);
+    for(int i = 15; i > 0; i --){
+      stepperStep(800);
     }
     
   }
+  setStepTarget(dir, 10);
+  for(int i = 5; i > 0; i --){
+      stepperStep(1200);
+    }
 
-  setStepTarget(dir, 25);
-  while(steps > 0){
-    stepperStep(1200);
+  
+
+  if(pickUp(dirDiabolo, dir) == 0){
+    scan(dirDiabolo, side);
   }
-
-  pickUp(dirDiabolo, dir);
+  
   
   
 
@@ -287,10 +384,17 @@ void setup() {
   Timer1.start();
 
   // Initial servo positions
-  servoPos.base     = 35;
-  servoPos.elbow    = 150;
-  servoPos.wrist    = 180;
-  servoPos.gripper  = 15;
+  newPos.base     = 35;
+  servoPos.base   = 35;
+
+  newPos.elbow    = 150;
+  servoPos.elbow = 150;
+
+  newPos.wrist    = 180;
+  servoPos.wrist = 180;
+
+  newPos.gripper  = 15;
+  servoPos.gripper = 15;
 
   // servoPos.base     = 90;
   // servoPos.elbow    = 90;
@@ -305,15 +409,15 @@ void setup() {
   delay(100);
 
   svElbow.attach(servo2Pin, 500, 2500);
-  svElbow.write(servoPos.elbow);
+  svElbow.write(newPos.elbow);
   delay(100);
 
   svWrist.attach(servo3Pin, 500, 2500);
-  svWrist.write(servoPos.wrist);
+  svWrist.write(newPos.wrist);
   delay(100);
 
   svGripper.attach(servoGrPin, 500, 2500);
-  svGripper.write(servoPos.gripper);
+  svGripper.write(newPos.gripper);
   delay(100);
 
   
@@ -374,7 +478,31 @@ void setup() {
 void loop() {
 
 
+  scan(VERTICAL, LEFT);
+
+  setStepTarget(0, abs(stepsTaken) + 100);
+  while(steps != 0){
+    stepperStep(800);
+  }
+  
+  delay(3000);
+
   scan(HORIZONTAL, RIGHT);
+
+  setStepTarget(1, abs(stepsTaken));
+  while(steps != 0){
+    stepperStep(800);
+  }
+
+  lastOne = true;
+
+
+  scan(VERTICAL, RIGHT);
+
+  setStepTarget(0, abs(stepsTaken));
+  while(steps != 0){
+    stepperStep(800);
+  }
   
   while(1);
   
