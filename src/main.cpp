@@ -81,6 +81,10 @@ int pauzeDel = 5000;
 int turnDelay = 20;
 int preTurnSpeed = 90;
 
+#define motorInterfaceType 1
+
+// Creates a stepper instance
+AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
 // CUSTOM VARIABLES
 // VVVVVVVVVVVVVVVV
@@ -124,6 +128,8 @@ Pos servoPos;
 
 Pos newPos;
 
+
+
 // FUNCTIONS
 // VVVVVVVVV
 void stepperStep(int stepDelay){
@@ -136,7 +142,7 @@ void stepperStep(int stepDelay){
     digitalWrite(stepPin, LOW);
     delayMicroseconds(stepDelay);
 
-    stepsTaken += -1*!digitalRead(dirPin) + digitalRead(dirPin);;
+    stepsTaken += -1*!digitalRead(dirPin) + digitalRead(dirPin);
     
 
     
@@ -211,16 +217,18 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
   
   if(vl1.readRange() > 200 && dirDiabolo == HORIZONTAL){
 
-    
+     turnStepper.move(clockwise * 20 + !clockwise * -20);
+    while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     delay(200);
 
-    newPos.base     = 30;
+    newPos.base     = 35;
+    newPos.elbow = 180;
     updateServoPos();
     
     delay(200);
 
-    newPos.elbow = 150;
+    newPos.elbow = 145;
     updateServoPos();
     delay(200);
 
@@ -239,11 +247,13 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     newPos.gripper  = 15;
     updateServoPos();
 
-    setStepTarget(!clockwise, 770);
-    while(steps > 0){
-      stepperStep(900);
-      Serial.println(steps);
-    }
+    // setStepTarget(!clockwise, 800);
+    // while(steps > 0){
+    //   stepperStep(900);
+    //   Serial.println(steps);
+    // }
+    turnStepper.move(clockwise * -800 + !clockwise * 800);
+    while(turnStepper.distanceToGo() != 0){turnStepper.run();}
     
     newPos.base = 14;
     newPos.elbow = 130;
@@ -265,18 +275,33 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
     Serial.println("grip");
 
-    setStepTarget(clockwise, 40);
-    for(int i = 0; i < 40; i ++){
-      stepperStep(900);
-      Serial.println(steps);
+    turnStepper.move(clockwise * 40 + !clockwise * -40);
+    while(turnStepper.distanceToGo() != 0){turnStepper.run();}
+
+    if(clockwise){
+      turnStepper.move(-15);
+      while(turnStepper.distanceToGo() != 0){turnStepper.run();}
     }
-    if(!clockwise){
-      setStepTarget(clockwise, 20);
-      for(int i = 0; i < 40; i ++){
-        stepperStep(900);
-        Serial.println(steps);
-      }
-    }
+
+    
+
+    // setStepTarget(clockwise, 40);
+    // for(int i = 0; i < 40; i ++){
+    //   stepperStep(900);
+      
+    // }
+
+
+    // if(!clockwise){
+    //   // setStepTarget(clockwise, 20);
+    //   // for(int i = 0; i < 40; i ++){
+    //   //   stepperStep(900);
+    //   //   Serial.println(steps);
+    //   // }
+
+    //   turnStepper.move(clockwise * 20 + !clockwise * -20);
+    //   while(turnStepper.distanceToGo() != 0){turnStepper.run();}
+    // }
 
     
 
@@ -318,16 +343,19 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
       return(1);
     }
 
-    setStepTarget(!clockwise, 800);
-    while(steps > 0){
-      stepperStep(900);
-      Serial.println(steps);
-    }
+    // setStepTarget(!clockwise, 830);
+    // while(steps > 0){
+    //   stepperStep(900);
+    //   Serial.println(steps);
+    // }
+
+    turnStepper.move(clockwise * -800 + !clockwise * 800);
+    while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     delay(200);
 
     newPos.base = 0;
-    newPos.elbow = 145;
+    newPos.elbow = 150;
     updateServoPos();
 
     delay(400);
@@ -341,10 +369,13 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     updateServoPos();
     
 
-    setStepTarget(-1, 20);
-    while(steps > 0){
-    stepperStep(1200);
-    }
+    // setStepTarget(-1, 20);
+    // while(steps > 0){
+    // stepperStep(1200);
+    // }
+
+    turnStepper.move(-20);
+      while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     newPos.base = 20;
     updateServoPos();
@@ -372,12 +403,14 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
 
   // Rotate arm to avoid support bracket
 
-  setStepTarget(dir, 100);
-  while(steps > 0){
-    stepperStep(1200);
+  // setStepTarget(dir, 100);
+  // while(steps > 0){
+  //   stepperStep(1200);
     
-  }
+  // }
 
+  turnStepper.move(dir * 100 + !dir * -100);
+  while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
   delay(200);
 
@@ -393,17 +426,26 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
 
   Serial.println("ji");
 
-  setStepTarget(dir, 800);
+  turnStepper.move(dir * 800 + !dir * -800);
+  // while(turnStepper.distanceToGo() != 0){turnStepper.run();}
+
+  // setStepTarget(dir, 800);
+
+  turnStepper.setAcceleration(2500);
   while(vl1.readRange() > 150){
-    for(int i = 15; i > 0; i --){
-      stepperStep(800);
-    }
+    turnStepper.move(dir * 25 + !dir * -25);
+    while(turnStepper.distanceToGo() != 0){turnStepper.run();}
     
   }
-  setStepTarget(dir, 10);
-  for(int i = 5; i > 0; i --){
-      stepperStep(1200);
-    }
+  turnStepper.setAcceleration(1000);
+  // setStepTarget(dir, 10);
+  // for(int i = 5; i > 0; i --){
+  //     stepperStep(1200);
+  //   }
+
+  // turnStepper.move(dir * 20 + !dir * -20);
+  // while(turnStepper.distanceToGo() != 0){turnStepper.run();}
+  
 
   
 
@@ -646,31 +688,40 @@ void exePauze(){
   Serial.println("Vl1 found!");
 
 
-  scan(VERTICAL, LEFT);
+      scan(VERTICAL, LEFT);
 
-      setStepTarget(0, abs(stepsTaken) + 100);
-      while(steps != 0){
-        stepperStep(800);
-      }
+      // setStepTarget(0, abs(stepsTaken) + 100);
+      // while(steps != 0){
+      //   stepperStep(800);
+      // }
+
+      turnStepper.moveTo(0);
+      while(turnStepper.distanceToGo() != 0){turnStepper.run();}
       
       delay(3000);
 
       scan(HORIZONTAL, RIGHT);
 
-      setStepTarget(1, abs(stepsTaken));
-      while(steps != 0){
-        stepperStep(800);
-      }
+      // setStepTarget(1, abs(stepsTaken)+30);
+      // while(steps != 0){
+      //   stepperStep(800);
+      // }
+
+      turnStepper.moveTo(0);
+      while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
       lastOne = true;
 
 
       scan(VERTICAL, RIGHT);
 
-      setStepTarget(0, abs(stepsTaken) - 75);
-      while(steps != 0){
-        stepperStep(800);
-      }
+      // setStepTarget(0, abs(stepsTaken) - 75);
+      // while(steps != 0){
+      //   stepperStep(800);
+      // }
+
+      turnStepper.moveTo(0);
+      while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 }
 
 void pauzeStop(){
@@ -746,6 +797,10 @@ void setup() {
   pinMode(curPinB, INPUT);
 
   pinMode(SwithFast, INPUT);
+
+  turnStepper.setMaxSpeed(1000);
+  turnStepper.setAcceleration(500);
+  turnStepper.setSpeed(1000);
 
   
   
