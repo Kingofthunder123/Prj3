@@ -81,8 +81,6 @@ int pauzeDel = 5000;
 int turnDelay = 20;
 int preTurnSpeed = 90;
 
-#define motorInterfaceType 1
-
 // Creates a stepper instance
 AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
 
