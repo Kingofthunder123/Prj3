@@ -66,13 +66,13 @@ void setup() {
 }
 
 void loop() {
-  turnStepper.move(-900);
+  turnStepper.move(-800);
   while(turnStepper.distanceToGo() > 0){
     turnStepper.run();
   }
 
   
-  turnStepper.move(900);
+  turnStepper.move(800);
   while(turnStepper.distanceToGo() > 0){
     turnStepper.run();
   }
