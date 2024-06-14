@@ -31,7 +31,7 @@ void setup() {
   pinMode(uStep2, OUTPUT);
 
   // Sets 1/4 microstepping
-  digitalWrite(uStep0, HIGH);
+  digitalWrite(uStep0, LOW);
   digitalWrite(uStep1, HIGH);
   digitalWrite(uStep2, LOW);
   
