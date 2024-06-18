@@ -210,19 +210,19 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
   
 
   
-  newPos.wrist = 140;
+  newPos.base = 25;
   updateServoPos();
 
   delay(100);
   
   if(vl1.readRange() > 200 && dirDiabolo == HORIZONTAL){
 
-    //  turnStepper.move(clockwise * 80 + !clockwise * -80);
-    // while(turnStepper.distanceToGo() != 0){turnStepper.run();}
+    turnStepper.move(clockwise * 50 + !clockwise * -50);
+    while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     delay(200);
 
-    newPos.base     = 35;
+    newPos.base     = 40;
     newPos.elbow = 180;
     updateServoPos();
     
@@ -232,19 +232,19 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     updateServoPos();
     delay(200);
 
-    newPos.base = 14;
+    newPos.base = 22;
     updateServoPos();
     delay(200);
 
-    newPos.gripper = 15;
+    newPos.gripper = 0;
     updateServoPos();
 
     delay(300);
 
-    newPos.base     = 50;
+    newPos.base     = 55;
     newPos.elbow    = 170;
     newPos.wrist    = 180;
-    newPos.gripper  = 15;
+    newPos.gripper  = 0;
     updateServoPos();
 
     // setStepTarget(!clockwise, 800);
@@ -255,7 +255,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     turnStepper.move(clockwise * -3100 + !clockwise * 3100);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
     
-    newPos.base = 14;
+    newPos.base = 23;
     newPos.elbow = 130;
     newPos.wrist    = 180;
     updateServoPos();
@@ -278,40 +278,45 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     // turnStepper.move(clockwise * 100 + !clockwise * -200);
     // while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
+    newPos.base = 21;
+    updateServoPos();
+
     
     
 
     delay(200);
 
     // Position sequence to pick up the diabolo
-    newPos.wrist = 105;
+    newPos.wrist = 85;
     updateServoPos();
-    newPos.base = 5;
-    newPos.wrist = 50;
+    // newPos.elbow = 140;
+    newPos.base = 4;
+    newPos.wrist = 25;
     updateServoPos();
-    newPos.base = 0;
+    newPos.base = 2;
     updateServoPos();
 
     delay(300);
 
 
-    newPos.elbow = 110;
-    newPos.wrist = 55;
-    newPos.gripper = 15;
+    newPos.elbow = 130;
+    newPos.wrist = 35;
+    newPos.gripper = 3;
     updateServoPos();
     
 
    
     delay(300);
 
-    newPos.base     = 20;
+    newPos.wrist = 30;
+    newPos.base     = 30;
     updateServoPos();
 
     delay(200);
 
     if(lastOne){
 
-      newPos.base = 40;
+      newPos.base = 50;
       newPos.elbow = 145;
       newPos.wrist    = 180;
       updateServoPos();
@@ -325,7 +330,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     //   Serial.println(steps);
     // }
 
-    turnStepper.move(clockwise * -3100 + !clockwise * 3100);
+    turnStepper.move(clockwise * -3200 + !clockwise * 3200);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     delay(200);
@@ -336,7 +341,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
     delay(400);
     newPos.gripper = 50;
-    newPos.wrist = 40;
+    // newPos.wrist = 40;
     updateServoPos();
 
     delay(200);
@@ -350,7 +355,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     // stepperStep(1200);
     // }
 
-    turnStepper.move(-120);
+    turnStepper.move(-140);
       while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     newPos.base = 20;
@@ -390,9 +395,9 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
 
   delay(200);
 
-  newPos.base     = 11;
+  newPos.base     = 22;
   newPos.elbow    = 165;
-  newPos.wrist    = 149;
+  newPos.wrist    = 154;
   newPos.gripper  = 70;
   updateServoPos();
 
@@ -421,7 +426,7 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
     digitalWrite(stepPin, LOW);
   }
 
-  turnStepper.move(dir * -90 + !dir * 70);
+  turnStepper.move(dir * -90 + !dir * 90);
   while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
 
@@ -612,8 +617,8 @@ void blink(){
 }
 
 void exePauze(){
-  newPos.base     = 40;
-  servoPos.base   = 40;
+  newPos.base     = 50;
+  servoPos.base   = 50;
 
   newPos.elbow    = 150;
   servoPos.elbow = 150;
@@ -701,6 +706,11 @@ void exePauze(){
       turnStepper.setMaxSpeed(3000);
       lastOne = true;
       delay(5000);
+
+      turnStepper.move(200);
+      while(turnStepper.distanceToGo() != 0){
+        turnStepper.run();
+      }
 
      
 
@@ -880,16 +890,8 @@ void loop() {
     // pauzeStop();
 
 
-    // exePauze();
+    exePauze();
 
-    newPos.gripper = 50;
-    updateServoPos();
-
-    delay(500);
-    newPos.gripper = 15;
-    updateServoPos();
-
-    
     
     stop = true;
     
