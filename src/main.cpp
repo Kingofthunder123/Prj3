@@ -73,15 +73,17 @@ int error;
 int lastError = 0;
 
 // Speed settings
-int maxSpeed = 220;
+int maxSpeed = 200;
 int rotationSpeed = 150;
 int stopSpeed = 50;
 
 // Delays
-int allignDel = 1;
+int allignDel = 200;
 int pauzeDel = 5000;
 int turnDelay = 20;
-int preTurnSpeed = 90;
+int preTurnSpeed = 75;
+
+int baseOffset = 25;
 
 // Creates a stepper instance
 AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
@@ -210,7 +212,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
   
 
   
-  newPos.wrist = 146;
+  newPos.wrist = 150;
   updateServoPos();
 
   delay(100);
@@ -222,7 +224,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
     delay(200);
 
-    newPos.base     = 40;
+    newPos.base     = 40 + baseOffset;
     newPos.elbow = 180;
     updateServoPos();
     
@@ -232,7 +234,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     updateServoPos();
     delay(200);
 
-    newPos.base = 19;
+    newPos.base = 20 + baseOffset;
     updateServoPos();
     delay(200);
 
@@ -241,16 +243,16 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
     delay(300);
 
-    newPos.base     = 60;
+    newPos.base     = 60 + baseOffset;
     newPos.elbow    = 170;
     newPos.wrist    = 180;
     newPos.gripper  = 0;
     updateServoPos();
 
-    turnStepper.move(clockwise * -3200 + !clockwise * 3200);
+    turnStepper.move(clockwise * -3250 + !clockwise * 3250);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
     
-    newPos.base = 20;
+    newPos.base = 20 + baseOffset;
     newPos.elbow = 130;
     newPos.wrist    = 180;
     updateServoPos();
@@ -258,7 +260,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     newPos.gripper = 50;
     updateServoPos();
 
-    newPos.base = 30;
+    newPos.base = 30 + baseOffset;
     updateServoPos();
 
     return(1);
@@ -270,10 +272,11 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
     Serial.println("grip");
 
-    turnStepper.move(clockwise * -20);
+    turnStepper.move(clockwise * 10);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
-    newPos.base = 23;
+
+    newPos.base = 23 + baseOffset;
     newPos.gripper = 60;
     updateServoPos();
 
@@ -283,21 +286,23 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     delay(200);
 
     // Position sequence to pick up the diabolo
-    newPos.wrist = 110;
+    newPos.wrist = 90;
     updateServoPos();
 
     newPos.elbow = 165;
-    newPos.base = 13;
-    newPos.wrist = 75;
+    newPos.base = 15 + baseOffset;
+    newPos.wrist = 45;
     updateServoPos();
 
-    newPos.wrist = 20;
+    newPos.base = 2 + baseOffset;
+    newPos.wrist = 30;
+    newPos.elbow = 150;
     updateServoPos();
 
    
-    newPos.base = 2;
+    newPos.base = 2 + baseOffset;
     newPos.elbow = 110;
-    newPos.wrist = 35;
+    newPos.wrist = 45;
     newPos.gripper = 4;
     updateServoPos();
     
@@ -306,15 +311,15 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     delay(300);
 
     newPos.wrist = 30;
-    newPos.base     = 30;
+    newPos.base     = 30 + baseOffset;
     updateServoPos();
 
     delay(200);
 
     if(lastOne){
 
-      newPos.base = 50;
-      newPos.elbow = 145;
+      newPos.base = 55 + baseOffset;
+      newPos.elbow = 160;
       newPos.wrist    = 180;
       updateServoPos();
 
@@ -322,12 +327,12 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     }
 
 
-    turnStepper.move(clockwise * -3200 + !clockwise * 3200);
+    turnStepper.move(clockwise * -3300 + !clockwise * 3300);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     delay(200);
 
-    newPos.base = 0;
+    newPos.base = 0 + baseOffset;
     newPos.elbow = 145;
     updateServoPos();
 
@@ -337,14 +342,14 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     updateServoPos();
 
     delay(200);
-    newPos.elbow = 170;
+    newPos.elbow = 155;
     newPos.wrist = 20;
     updateServoPos();
     
-    turnStepper.move(-110);
+    turnStepper.move(-170);
       while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
-    newPos.base = 25;
+    newPos.base = 25 + baseOffset;
     updateServoPos();
     
     return(1);
@@ -377,7 +382,7 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
 
   delay(200);
 
-  newPos.base     = 23;
+  newPos.base     = 23 + baseOffset;
   newPos.elbow    = 163;
   newPos.wrist    = 158;
   newPos.gripper  = 70;
@@ -390,17 +395,27 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
   Serial.println("ji");
 
  
-  turnStepper.setAcceleration(5000);
+  turnStepper.setAcceleration(2000);
+  turnStepper.setSpeed(5000);
   while(vl1.readRange() > 200){
-    turnStepper.move(dir * 200 + !dir * -200);
+    turnStepper.move(dir * 250 + !dir * -250);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
     
   }
+  turnStepper.setSpeed(3000);
   turnStepper.setAcceleration(3000);
 
   while(vl1.readRange() < 200){
     digitalWrite(stepPin, HIGH);
-    delay(5);
+    delay(10);
+    digitalWrite(stepPin, LOW);
+    delay(10);
+    digitalWrite(stepPin, HIGH);
+    delay(10);
+    digitalWrite(stepPin, LOW);
+    delay(10);
+    digitalWrite(stepPin, HIGH);
+    delay(10);
     digitalWrite(stepPin, LOW);
   }
 
@@ -426,18 +441,18 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
 // Change the speed depending on the current switch position  (fast or slow)
 void speedControl() {
   if(digitalRead(SwithFast) == HIGH){
-    defSpd = 255;
+    defSpd = 200;
     rotationSpeed = 180;
     stopSpeed = 15;
     turnDelay = 175;
-    preTurnSpeed = 90;
+    preTurnSpeed = 70;
   }
   else {
-    defSpd = 255;
+    defSpd = 200;
     rotationSpeed = 140;
     stopSpeed = 15;
     turnDelay = 100;
-    preTurnSpeed = 100;
+    preTurnSpeed = 70;
   }
 
 }
@@ -583,8 +598,8 @@ void blink(){
 }
 
 void exePauze(){
-  newPos.base     = 50;
-  servoPos.base   = 50;
+  newPos.base     = 80;
+  servoPos.base   = 80;
 
   newPos.elbow    = 150;
   servoPos.elbow = 150;
@@ -663,7 +678,7 @@ void exePauze(){
       turnStepper.setMaxSpeed(3000);
       lastOne = true;
      
-      turnStepper.move(600);
+      turnStepper.move(200);
       while(turnStepper.distanceToGo() != 0){
         turnStepper.run();
       }
@@ -672,7 +687,7 @@ void exePauze(){
 
       scan(VERTICAL, RIGHT);
 
-      turnStepper.setMaxSpeed(500);
+      turnStepper.setMaxSpeed(1200);
       turnStepper.moveTo(-3200);
       while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
       turnStepper.setMaxSpeed(3000);
@@ -712,6 +727,18 @@ void pauzeStop(){
   
     }
     else{
+      turnStepper.setCurrentPosition(0);
+      turnStepper.setSpeed(3000);
+      turnStepper.moveTo(-1600);
+      while(turnStepper.distanceToGo() <= 0){
+        turnStepper.run();
+      }
+
+      newPos.base     = 30 + baseOffset;
+      newPos.elbow    = 140;
+      updateServoPos();
+
+      delay(700);
       stop = true;
     }
   }
@@ -787,7 +814,8 @@ void loop() {
   
 
   //main while loop
-  while(!stop){  
+  while(!stop){ 
+
 
     // PIDSteer();
 
@@ -797,12 +825,13 @@ void loop() {
 
     // pauzeStop();
 
-
-
     exePauze();
 
-    
+
     stop = true;
+   
+
+    
     
   }
 
