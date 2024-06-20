@@ -1,11 +1,12 @@
 #include <Arduino.h>
 #include <Servo.h> 
-#include <Adafruit_VL6180X.h>
 #include <SPI.h>
 #include <AccelStepper.h>
 #include <Adafruit_TCS34725.h>
 #include <TimerOne.h>
 #include <QTRSensors.h>
+#include <VL6180X.h>
+#include <Wire.h>
 
 QTRSensors qtr;
 
@@ -83,7 +84,7 @@ int pauzeDel = 5000;
 int turnDelay = 20;
 int preTurnSpeed = 75;
 
-int baseOffset = 25;
+int baseOffset = 100;
 
 // Creates a stepper instance
 AccelStepper turnStepper(motorInterfaceType, stepPin, dirPin);
@@ -111,7 +112,7 @@ Servo svWrist;
 Servo svGripper;
 
 // Creates vl1 instance for VL6180 distance sensor 
-Adafruit_VL6180X vl1 = Adafruit_VL6180X();
+VL6180X sensor;
 // Adafruit_VL6180X vl2 = Adafruit_VL6180X();
 
 // Custom variable type for diabolo orientation
@@ -209,15 +210,17 @@ void updateServoPos(){
 
 bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
 
-  
+  sensor.startRangeContinuous();
 
   
-  newPos.wrist = 150;
+  newPos.wrist = 144;
   updateServoPos();
 
   delay(100);
   
-  if(vl1.readRange() > 200 && dirDiabolo == HORIZONTAL){
+  if(sensor.readRangeContinuousMillimeters() > 200 && dirDiabolo == HORIZONTAL){
+
+    sensor.stopContinuous();
 
     turnStepper.move(clockwise * 50 + !clockwise * -50);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
@@ -268,7 +271,9 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     
   }
 
-  else if(vl1.readRange() < 200 && dirDiabolo == VERTICAL){
+  else if(sensor.readRangeContinuousMillimeters() && dirDiabolo == VERTICAL){
+
+    sensor.stopContinuous();
 
     Serial.println("grip");
 
@@ -355,7 +360,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     return(1);
   }
 
- 
+  sensor.stopContinuous();
 
   return(0);
 }
@@ -383,8 +388,8 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
   delay(200);
 
   newPos.base     = 23 + baseOffset;
-  newPos.elbow    = 163;
-  newPos.wrist    = 158;
+  newPos.elbow    = 160;
+  newPos.wrist    = 160;
   newPos.gripper  = 70;
   updateServoPos();
 
@@ -394,18 +399,22 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
 
   Serial.println("ji");
 
+  sensor.startRangeContinuous(20);
+
+  delay(100);
+
  
-  turnStepper.setAcceleration(2000);
+  turnStepper.setAcceleration(3000);
   turnStepper.setSpeed(5000);
-  while(vl1.readRange() > 200){
-    turnStepper.move(dir * 250 + !dir * -250);
+  while(sensor.readRangeContinuousMillimeters() > 200){
+    turnStepper.move(dir * 300 + !dir * -300);
     while(turnStepper.distanceToGo() != 0){turnStepper.run();}
     
   }
   turnStepper.setSpeed(3000);
   turnStepper.setAcceleration(3000);
 
-  while(vl1.readRange() < 200){
+  while(sensor.readRangeContinuousMillimeters() < 200){
     digitalWrite(stepPin, HIGH);
     delay(10);
     digitalWrite(stepPin, LOW);
@@ -418,6 +427,8 @@ void scan(ORIENTATION dirDiabolo, SIDE side){
     delay(10);
     digitalWrite(stepPin, LOW);
   }
+
+  sensor.stopContinuous();
 
   turnStepper.move(dir * -90 + !dir * 90);
   while(turnStepper.distanceToGo() != 0){turnStepper.run();}
@@ -642,55 +653,63 @@ void exePauze(){
   digitalWrite(uStep1, HIGH);
   digitalWrite(uStep2, LOW);
 
-  while (!Serial) {
-    delay(1);
-  }
+  Wire.begin();
 
-  delay(20);
-  // !!!VL1!!!
-  // Begins communication with ToF sensor vl1
-  if (!vl1.begin()) {
-    Serial.println("Failed to find vl1");
-    while (1);
-  }
-  Serial.println("Vl1 found!");
+  sensor.init();
+  sensor.configureDefault();
+
+  // Reduce range max convergence time and ALS integration
+  // time to 30 ms and 50 ms, respectively, to allow 10 Hz
+  // operation (as suggested by table "Interleaved mode
+  // limits (10 Hz operation)" in the datasheet).
+  sensor.writeReg(VL6180X::SYSRANGE__MAX_CONVERGENCE_TIME, 30);
+  sensor.writeReg16Bit(VL6180X::SYSALS__INTEGRATION_PERIOD, 50);
+
+  sensor.setTimeout(500);
+
+   // stop continuous mode if already active
+  sensor.stopContinuous();
+  // in case stopContinuous() triggered a single-shot
+  // measurement, wait for it to complete
+  delay(300);
+  // start interleaved continuous mode with period of 100 ms
 
 
-      scan(VERTICAL, LEFT);
+  scan(VERTICAL, LEFT);
 
-      turnStepper.setMaxSpeed(800);
-      turnStepper.move(-3200);
-      while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
-      turnStepper.setMaxSpeed(3000);
+  turnStepper.setMaxSpeed(800);
+  turnStepper.move(-3200);
+  while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
+  turnStepper.setMaxSpeed(3000);
       
-      delay(3000);
+  delay(3000);
 
-      turnStepper.move(100);
-      while(turnStepper.distanceToGo() != 0){
-        turnStepper.run();
-      }
+  turnStepper.move(100);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
 
-      scan(HORIZONTAL, RIGHT);
+  scan(HORIZONTAL, RIGHT);
 
-      turnStepper.setMaxSpeed(900);
-      turnStepper.move(3200);
-      while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
-      turnStepper.setMaxSpeed(3000);
-      lastOne = true;
+  turnStepper.setMaxSpeed(900);
+  turnStepper.move(3200);
+  while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
+  turnStepper.setMaxSpeed(3000);
+  lastOne = true;
      
-      turnStepper.move(200);
-      while(turnStepper.distanceToGo() != 0){
-        turnStepper.run();
-      }
+  turnStepper.move(200);
+  while(turnStepper.distanceToGo() != 0){
+    turnStepper.run();
+  }
 
      
 
-      scan(VERTICAL, RIGHT);
+  scan(VERTICAL, RIGHT);
 
-      turnStepper.setMaxSpeed(1200);
-      turnStepper.moveTo(-3200);
-      while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
-      turnStepper.setMaxSpeed(3000);
+  turnStepper.setMaxSpeed(1200);
+  turnStepper.moveTo(-3200);
+  while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
+  turnStepper.setMaxSpeed(3000);
 }
 
 void pauzeStop(){
