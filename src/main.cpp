@@ -75,7 +75,7 @@ int lastError = 0;
 
 // Speed settings
 int maxSpeed = 170;
-int rotationSpeed = 150;
+int rotationSpeed = 170;
 int stopSpeed = 55;
 
 // Delays
@@ -258,7 +258,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     newPos.base     = 57 + baseOffset;
     newPos.elbow    = 170;
     newPos.wrist    = 180;
-    newPos.gripper  = 5;
+    newPos.gripper  = 0;
     updateServoPos();
 
     if(lastOne){
@@ -329,7 +329,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     newPos.elbow = 150;
     updateServoPos();
 
-    newPos.gripper = 5; 
+    newPos.gripper = 0; 
     newPos.base = 3 + baseOffset;
     newPos.elbow = 115;
     newPos.wrist = 65;
@@ -375,7 +375,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     newPos.wrist = 20;
     updateServoPos();
     
-    turnStepper.move(-300);
+    turnStepper.move( clockwise * -300 + !clockwise * -300);
       while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     newPos.base = 25 + baseOffset;
@@ -718,7 +718,7 @@ void exePauze(){
 
   scan(secondDia, RIGHT);
 
-  turnStepper.setMaxSpeed(1200);
+  turnStepper.setMaxSpeed(2500);
   turnStepper.moveTo(-3200);
   while(turnStepper.distanceToGo() != 0 && !digitalRead(zeroButton)){turnStepper.run();}
   turnStepper.setMaxSpeed(3000);
@@ -759,20 +759,32 @@ void pauzeStop(){
   
     }
     else{
-      turnStepper.setCurrentPosition(0);
-      turnStepper.setSpeed(3000);
-      turnStepper.moveTo(-1600);
-      while(turnStepper.distanceToGo() <= 0){
-        turnStepper.run();
-      }
+      digitalWrite(dirPin, LOW);
+      
+      for(int i = 2100; i > 0; i --){
+        digitalWrite(stepPin, HIGH);
+        delayMicroseconds(200);
+        digitalWrite(stepPin, LOW);
+        delayMicroseconds(200);
+        }
+          
 
-      newPos.base     = 30 + baseOffset;
-      newPos.elbow    = 140;
+      
+      
+      // Servo Final;
+
+      // Final.attach(servoGrPin, 500, 2500);
+      // Final.write(90);
+
+
+      newPos.base = 14 + baseOffset;
+      newPos.elbow = 120;
       updateServoPos();
 
-      delay(200);
+      newPos.gripper = 80;
+      updateServoPos();
 
-      svGripper.write(180);
+      newPos.base += 15;
       updateServoPos();
 
       delay(700);
