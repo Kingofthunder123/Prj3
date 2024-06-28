@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <Servo.h> 
-#include <Adafruit_VL6180X.h>
+#include <VL6180X.h>
 #include <SPI.h>
 #include <AccelStepper.h>
 #include <Adafruit_TCS34725.h>
