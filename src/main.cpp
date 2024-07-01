@@ -79,7 +79,7 @@ int rotationSpeed = 170;
 int stopSpeed = 55;
 
 // Delays
-int allignDel = 175;
+int allignDel = 160;
 int pauzeDel = 5000;
 int turnDelay = 20;
 int preTurnSpeed = 90;
@@ -375,7 +375,7 @@ bool pickUp(ORIENTATION dirDiabolo, bool clockwise){
     newPos.wrist = 20;
     updateServoPos();
     
-    turnStepper.move( clockwise * -300 + !clockwise * -300);
+    turnStepper.move( clockwise * 300 + !clockwise * -300);
       while(turnStepper.distanceToGo() != 0){turnStepper.run();}
 
     newPos.base = 25 + baseOffset;
@@ -845,7 +845,7 @@ void setup() {
   
   digitalWrite(45, HIGH);
 
-  for (uint16_t i = 0; i < 150; i++){
+  for (uint16_t i = 0; i < 250; i++){
     qtr.calibrate();
     Serial.println(i);
   }
